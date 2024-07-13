@@ -1,17 +1,11 @@
 package com.ixume.alchemy;
 
+import com.ixume.alchemy.listener.PlayerInteractListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Alchemy extends JavaPlugin {
-
     @Override
     public void onEnable() {
-        // Plugin startup logic
-
-    }
-
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
+        PlayerInteractListener.init(this);
     }
 }

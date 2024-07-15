@@ -3,3 +3,6 @@ version: '${version}'
 main: com.ixume.alchemy.Alchemy
 api-version: '1.20'
 load: STARTUP
+
+commands:
+  hitbox:

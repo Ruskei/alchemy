@@ -7,5 +7,7 @@ public final class Alchemy extends JavaPlugin {
     @Override
     public void onEnable() {
         PlayerInteractListener.init(this);
+
+        FaceHitboxBuildCommand.init(this);
     }
 }

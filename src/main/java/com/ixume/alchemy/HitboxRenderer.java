@@ -52,12 +52,36 @@ public class HitboxRenderer {
                     if (new Vector3d(edgeUnitVector).dot(hitbox2.normal) == 0) continue;
 
                     Vector3d intersection = edgePoint.add(new Vector3d(edgeUnitVector).mul((new Vector3d(planePoint).sub(edgePoint)).dot(hitbox2.normal)/(new Vector3d(edgeUnitVector).dot(hitbox2.normal))));
-                    intersections.add(new Location(world, intersection.x, intersection.y, intersection.z));
+                    if (insideTriangle(intersection, hitbox2.vertices[0].toVector().toVector3d(),
+                            hitbox2.vertices[1].toVector().toVector3d(),
+                            hitbox2.vertices[2].toVector().toVector3d())) {
+                        intersections.add(new Location(world, intersection.x, intersection.y, intersection.z));
+                    }
                 }
             }
         }
 
         return intersections;
+    }
+
+    private boolean insideTriangle(Vector3d point, Vector3d t1, Vector3d t2, Vector3d t3) {
+        Vector3d p = new Vector3d(point);
+        Vector3d a = new Vector3d(t1);
+        Vector3d b = new Vector3d(t2);
+        Vector3d c = new Vector3d(t3);
+
+        a.sub(p);
+        b.sub(p);
+        c.sub(p);
+
+        Vector3d u = new Vector3d(b).cross(c);
+        Vector3d v = c.cross(a);
+        Vector3d w = a.cross(b);
+
+        if (v.dot(u) < 0.001f) return false;
+        if (w.dot(u) < 0.001f) return false;
+
+        return true;
     }
 
     public void addHitbox(TriangleHitbox hitbox) {

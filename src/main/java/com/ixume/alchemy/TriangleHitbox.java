@@ -4,12 +4,15 @@ import org.bukkit.*;
 import org.bukkit.util.Vector;
 import org.joml.Vector3d;
 
-public class TriangleHitbox {
-    private Location[] vertices;
-    private Vector3d[] edges;
-    private Vector3d normal;
+import java.util.List;
 
-    private final Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.6F);;
+public class TriangleHitbox {
+    public Location[] vertices;
+    public Vector3d[] edges;
+    public Vector3d normal;
+
+    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);;
+    private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.4F);;
 
     public TriangleHitbox(Location[] vertices, Alchemy plugin) {
         this.vertices = vertices;
@@ -34,7 +37,7 @@ public class TriangleHitbox {
                 Location particleLocation = vertices[i].clone();
                 Vector3d fractionalEdge = new Vector3d(normalizedEdge).mul(d);
                 particleLocation.add(new Vector(fractionalEdge.x, fractionalEdge.y, fractionalEdge.z));
-                world.spawnParticle(Particle.DUST, particleLocation, 1, dustOptions);
+                world.spawnParticle(Particle.DUST, particleLocation, 1, edgeDust);
             }
         }
 
@@ -42,7 +45,7 @@ public class TriangleHitbox {
             Location particleLocation = vertices[1].clone();
             Vector3d fractionalEdge = new Vector3d(normal).mul(d);
             particleLocation.add(new Vector(fractionalEdge.x, fractionalEdge.y, fractionalEdge.z));
-            world.spawnParticle(Particle.DUST, particleLocation, 1, dustOptions);
+            world.spawnParticle(Particle.DUST, particleLocation, 1, normalDust);
         }
     }
 }

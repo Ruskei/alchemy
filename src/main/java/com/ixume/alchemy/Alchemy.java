@@ -9,5 +9,7 @@ public final class Alchemy extends JavaPlugin {
         PlayerInteractListener.init(this);
 
         FaceHitboxBuildCommand.init(this);
+
+        HitboxRenderer.init(this);
     }
 }

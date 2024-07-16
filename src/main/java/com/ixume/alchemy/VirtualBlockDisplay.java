@@ -1,6 +1,8 @@
 package com.ixume.alchemy;
 
 import org.bukkit.*;
+import org.bukkit.entity.BlockDisplay;
+import org.bukkit.util.Transformation;
 import org.joml.Matrix3d;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
@@ -33,12 +35,31 @@ public class VirtualBlockDisplay {
         vertices = vertices.stream().map(k ->
             k.mul(matrix).add(originVector)).toList();
 
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            render();
-        }, 1, 1);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::render, 1, 1);
     }
 
+    public VirtualBlockDisplay(BlockDisplay blockDisplay, Alchemy plugin) {
+        Vector3d originVector = blockDisplay.getLocation().toVector().toVector3d();
+        vertices = new ArrayList<>();
+        vertices.add(new Vector3d(0, 0, 0));
+        vertices.add(new Vector3d(1, 0, 0));
+        vertices.add(new Vector3d(1, 0, 1));
+        vertices.add(new Vector3d(0, 0, 1));
 
+        vertices.add(new Vector3d(0, 1, 0));
+        vertices.add(new Vector3d(1, 1, 0));
+        vertices.add(new Vector3d(1, 1, 1));
+        vertices.add(new Vector3d(0, 1, 1));
+
+        Transformation transformation = blockDisplay.getTransformation();
+        Matrix3d matrix = new Matrix3d();
+        transformation.getLeftRotation().get(matrix);
+
+        vertices = vertices.stream().map(k ->
+                k.mul(matrix).add(transformation.getTranslation()).add(originVector)).toList();
+
+        Bukkit.getScheduler().runTaskTimer(plugin, this::render, 1, 1);
+    }
 
     private void render() {
         connect(vertices.get(0), vertices.get(1));

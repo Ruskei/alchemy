@@ -8,12 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TriangleHitboxFragment implements HitboxFragment {
-    public Location[] vertices;
-    public Vector3d[] edges;
-    public Vector3d normal;
+    private Location[] vertices;
+    private Vector3d[] edges;
+    private Vector3d normal;
 
-    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);;
-    private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.4F);;
+    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
+    private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.4F);
 
     public TriangleHitboxFragment(Location[] vertices, Alchemy plugin) {
         this.vertices = vertices;

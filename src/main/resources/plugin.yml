@@ -6,3 +6,4 @@ load: STARTUP
 
 commands:
   hitbox:
+  virtualtest:

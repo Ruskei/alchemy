@@ -10,18 +10,18 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FaceHitboxBuildCommand implements CommandExecutor {
+public class TriangleHitboxFragmentCommand implements CommandExecutor {
     private List<Location> vertices;
     private Alchemy plugin;
 
-    private static FaceHitboxBuildCommand INSTANCE;
-    private FaceHitboxBuildCommand(Alchemy plugin) {
+    private static TriangleHitboxFragmentCommand INSTANCE;
+    private TriangleHitboxFragmentCommand(Alchemy plugin) {
         vertices = new ArrayList<>();
         this.plugin = plugin;
     }
 
     public static void init(Alchemy plugin) {
-        if (INSTANCE == null) INSTANCE = new FaceHitboxBuildCommand(plugin);
+        if (INSTANCE == null) INSTANCE = new TriangleHitboxFragmentCommand(plugin);
         plugin.getCommand("hitbox").setExecutor(INSTANCE);
     }
 

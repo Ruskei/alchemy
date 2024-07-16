@@ -8,7 +8,8 @@ public final class Alchemy extends JavaPlugin {
     public void onEnable() {
         PlayerInteractListener.init(this);
 
-        FaceHitboxBuildCommand.init(this);
+        TriangleHitboxFragmentCommand.init(this);
+        VirtualBlockDisplayCommand.init(this);
 
         HitboxRenderer.init(this);
     }

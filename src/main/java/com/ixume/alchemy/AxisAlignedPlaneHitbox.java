@@ -104,10 +104,10 @@ public class AxisAlignedPlaneHitbox implements Hitbox {
     }
 
     public void render() {
-        connect(vertices[0], vertices[1]);
-        connect(vertices[1], vertices[2]);
-        connect(vertices[2], vertices[3]);
-        connect(vertices[3], vertices[0]);
+//        connect(vertices[0], vertices[1]);
+//        connect(vertices[1], vertices[2]);
+//        connect(vertices[2], vertices[3]);
+//        connect(vertices[3], vertices[0]);
     }
 
     private void connect(Vector3d a, Vector3d b) {
@@ -117,6 +117,12 @@ public class AxisAlignedPlaneHitbox implements Hitbox {
             Vector3d n = new Vector3d(a).add(new Vector3d(diff).mul(d));
             Location particleLocation = new Location(world, n.x, n.y, n.z);
             world.spawnParticle(Particle.DUST, particleLocation, 1, edgeDust);
+        }
+    }
+
+    public void translate(Vector3d translation) {
+        for (int i = 0; i < vertices.length; i++) {
+            vertices[i] = vertices[i].add(translation);
         }
     }
 }

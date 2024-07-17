@@ -24,7 +24,7 @@ public class BoundingBoxTestCommand implements CommandExecutor {
             return false;
         }
 
-        new BoundingBoxGameObject(player.getBoundingBox(), plugin);
+        new BoundingBoxGameObject(player, plugin);
 
         return true;
     }

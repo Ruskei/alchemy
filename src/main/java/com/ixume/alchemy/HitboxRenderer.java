@@ -41,6 +41,10 @@ public class HitboxRenderer {
         World world = Bukkit.getWorld("world");
         Set<Location> intersections = new HashSet<>();
         for (GameObject object : objects) {
+            if (object instanceof BoundingBoxGameObject g) {
+                g.update();
+            }
+
             for (GameObject object2 : objects) {
                 if (object == object2) continue;
                 for (Hitbox hitbox : object.getHitboxes()) {

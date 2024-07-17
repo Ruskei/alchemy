@@ -1,6 +1,8 @@
 package com.ixume.alchemy;
 
+import org.bukkit.entity.Entity;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
@@ -8,7 +10,14 @@ import java.util.List;
 
 public class BoundingBoxGameObject implements GameObject {
     private final List<Hitbox> hitboxes;
-    public BoundingBoxGameObject(BoundingBox boundingBox, Alchemy plugin) {
+    private Entity entity;
+    private BoundingBox boundingBox;
+    private Vector loc;
+
+    public BoundingBoxGameObject(Entity entity, Alchemy plugin) {
+        this.entity = entity;
+        this.boundingBox = entity.getBoundingBox();
+        loc = boundingBox.getCenter().clone();
         hitboxes = new ArrayList<>();
         //bottom
         hitboxes.add(new AxisAlignedPlaneHitbox(boundingBox.getMin().toVector3d(),
@@ -41,5 +50,13 @@ public class BoundingBoxGameObject implements GameObject {
     @Override
     public List<Hitbox> getHitboxes() {
         return hitboxes;
+    }
+
+    public void update() {
+        boundingBox = entity.getBoundingBox();
+        Vector diff = boundingBox.getCenter().clone().subtract(loc);
+        Vector3d diff2 = new Vector3d(diff.getX(), diff.getY(), diff.getZ());
+        hitboxes.forEach(h -> ((AxisAlignedPlaneHitbox) h).translate(diff2));
+        loc = boundingBox.getCenter();
     }
 }

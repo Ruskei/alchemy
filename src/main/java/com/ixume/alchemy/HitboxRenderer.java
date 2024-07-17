@@ -1,7 +1,6 @@
 package com.ixume.alchemy;
 
 import org.bukkit.*;
-import org.joml.Vector3d;
 
 import java.util.HashSet;
 import java.util.List;
@@ -10,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class HitboxRenderer {
     private Alchemy plugin;
-    private volatile List<TriangleHitboxFragment> hitboxes;
+    private volatile List<Hitbox> hitboxes;
     private volatile List<Location> intersections;
 
     private final Particle.DustOptions intersectionDust = new Particle.DustOptions(Color.fromRGB(0, 255, 0), 1.0F);;
@@ -28,7 +27,7 @@ public class HitboxRenderer {
         hitboxes = new CopyOnWriteArrayList<>();
         intersections = new CopyOnWriteArrayList<>();
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            HitboxRenderer.INSTANCE.hitboxes.forEach(TriangleHitboxFragment::render);
+            HitboxRenderer.INSTANCE.hitboxes.forEach(Hitbox::render);
             World world = Bukkit.getWorld("world");
             intersections = findIntersections().stream().toList();
 
@@ -41,8 +40,8 @@ public class HitboxRenderer {
     private Set<Location> findIntersections() {
         World world = Bukkit.getWorld("world");
         Set<Location> intersections = new HashSet<>();
-        for (TriangleHitboxFragment hitbox : hitboxes) {
-            for (TriangleHitboxFragment hitbox2 : hitboxes) {
+        for (Hitbox hitbox : hitboxes) {
+            for (Hitbox hitbox2 : hitboxes) {
                 if (hitbox == hitbox2) continue;
 
                 intersections.addAll(hitbox.intersect(hitbox2).stream()
@@ -54,7 +53,7 @@ public class HitboxRenderer {
         return intersections;
     }
 
-    public void addHitbox(TriangleHitboxFragment hitbox) {
+    public void addHitbox(Hitbox hitbox) {
         hitboxes.add(hitbox);
     }
 }

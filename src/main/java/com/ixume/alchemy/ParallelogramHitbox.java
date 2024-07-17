@@ -3,8 +3,11 @@ package com.ixume.alchemy;
 import org.bukkit.*;
 import org.bukkit.util.Vector;
 import org.joml.Vector3d;
+
+import java.util.List;
+
 //defined with 3 points, 4th is filled in
-public class ParallelogramHitboxFragment implements HitboxFragment {
+public class ParallelogramHitbox implements Hitbox {
     private Location[] vertices;
     private Vector3d[] edges;
     private Vector3d normal;
@@ -12,7 +15,7 @@ public class ParallelogramHitboxFragment implements HitboxFragment {
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
     private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.4F);
 
-    public ParallelogramHitboxFragment(Location[] vertices, Alchemy plugin) {
+    public ParallelogramHitbox(Location[] vertices, Alchemy plugin) {
         this.vertices = vertices;
         edges = new Vector3d[4];
         for (int i = 0; i < 4; i++) {
@@ -37,6 +40,11 @@ public class ParallelogramHitboxFragment implements HitboxFragment {
     @Override
     public boolean inside(Vector3d point) {
         return false;
+    }
+
+    @Override
+    public List<Vector3d> intersect(Hitbox hitbox) {
+        return null;
     }
 
     public void render() {

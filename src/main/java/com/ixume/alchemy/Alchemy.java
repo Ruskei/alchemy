@@ -10,6 +10,7 @@ public final class Alchemy extends JavaPlugin {
 
         TriangleHitboxFragmentCommand.init(this);
         VirtualBlockDisplayCommand.init(this);
+        BoundingBoxTestCommand.init(this);
 
         HitboxRenderer.init(this);
     }

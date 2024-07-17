@@ -7,7 +7,7 @@ import org.joml.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TriangleHitboxFragment implements HitboxFragment {
+public class TriangleHitbox implements Hitbox {
     private Location[] vertices;
     private Vector3d[] edges;
     private Vector3d normal;
@@ -15,7 +15,7 @@ public class TriangleHitboxFragment implements HitboxFragment {
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
     private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.4F);
 
-    public TriangleHitboxFragment(Location[] vertices, Alchemy plugin) {
+    public TriangleHitbox(Location[] vertices, Alchemy plugin) {
         this.vertices = vertices;
         edges = new Vector3d[3];
         for (int i = 0; i < 3; i++) {
@@ -27,7 +27,7 @@ public class TriangleHitboxFragment implements HitboxFragment {
         Bukkit.getScheduler().runTaskTimer(plugin, this::render, 1, 1);
     }
 
-    public List<Vector3d> intersect(HitboxFragment hitbox) {
+    public List<Vector3d> intersect(Hitbox hitbox) {
         List<Vector3d> intersections = new ArrayList<>();
         Vector3d planePoint = hitbox.planePoint();
         for (int i = 0; i < edges.length; i++) {

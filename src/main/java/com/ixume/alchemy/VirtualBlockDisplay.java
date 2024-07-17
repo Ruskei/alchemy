@@ -58,6 +58,8 @@ public class VirtualBlockDisplay {
         vertices = vertices.stream().map(k ->
                 k.mul(matrix).add(transformation.getTranslation()).add(originVector)).toList();
 
+//        HitboxRenderer.getInstance().addHitbox();
+
         Bukkit.getScheduler().runTaskTimer(plugin, this::render, 1, 1);
     }
 

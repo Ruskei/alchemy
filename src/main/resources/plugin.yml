@@ -7,3 +7,4 @@ load: STARTUP
 commands:
   hitbox:
   virtualtest:
+  boundingtest:

@@ -89,7 +89,12 @@ public class AxisAlignedPlaneHitbox implements Hitbox {
             Vector3d edgePoint = new Vector3d(vertices[i]);
             if (new Vector3d(edgeUnitVector).dot(hitbox.normal()) == 0) continue;
 
-            Vector3d intersection = edgePoint.add(new Vector3d(edgeUnitVector).mul((new Vector3d(planePoint).sub(edgePoint)).dot(hitbox.normal())/(new Vector3d(edgeUnitVector).dot(hitbox.normal()))));
+            double factor = (new Vector3d(planePoint).sub(edgePoint)).dot(hitbox.normal())/(new Vector3d(edgeUnitVector).dot(hitbox.normal()));
+            if (factor < 0d || factor > edge.length()) {
+                continue;
+            }
+
+            Vector3d intersection = edgePoint.add(new Vector3d(edgeUnitVector).mul(factor));
             if (hitbox.inside(intersection)) {
                 intersections.add(intersection);
             }

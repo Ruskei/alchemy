@@ -6,8 +6,8 @@ import org.joml.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BoundingBoxGameObject {
-    private final List<AxisAlignedPlaneHitbox> hitboxes;
+public class BoundingBoxGameObject implements GameObject {
+    private final List<Hitbox> hitboxes;
     public BoundingBoxGameObject(BoundingBox boundingBox, Alchemy plugin) {
         hitboxes = new ArrayList<>();
         //bottom
@@ -35,6 +35,11 @@ public class BoundingBoxGameObject {
                 new Vector3d(boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ()),
                 plugin));
 
-        hitboxes.forEach(h -> HitboxRenderer.getInstance().addHitbox(h));
+        HitboxRenderer.getInstance().addHitbox(this);
+    }
+
+    @Override
+    public List<Hitbox> getHitboxes() {
+        return hitboxes;
     }
 }

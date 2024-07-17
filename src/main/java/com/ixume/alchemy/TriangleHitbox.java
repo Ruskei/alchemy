@@ -34,9 +34,12 @@ public class TriangleHitbox implements Hitbox {
             Vector3d edge = edges[i];
             Vector3d edgeUnitVector = new Vector3d(edge).normalize();
             Vector3d edgePoint = vertices[i].toVector().toVector3d();
-            if (new Vector3d(edgeUnitVector).dot(hitbox.normal()) == 0) continue;
+            double factor = (new Vector3d(planePoint).sub(edgePoint)).dot(hitbox.normal())/(new Vector3d(edgeUnitVector).dot(hitbox.normal()));
+            if (factor < 0d || factor > edge.length()) {
+                continue;
+            }
 
-            Vector3d intersection = edgePoint.add(new Vector3d(edgeUnitVector).mul((new Vector3d(planePoint).sub(edgePoint)).dot(hitbox.normal())/(new Vector3d(edgeUnitVector).dot(hitbox.normal()))));
+            Vector3d intersection = edgePoint.add(new Vector3d(edgeUnitVector).mul(factor));
             if (hitbox.inside(intersection)) {
                 intersections.add(intersection);
             }

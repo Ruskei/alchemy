@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class HitboxRenderer {
     private Alchemy plugin;
-    private volatile List<Hitbox> hitboxes;
+    private volatile List<GameObject> objects;
     private volatile List<Location> intersections;
 
     private final Particle.DustOptions intersectionDust = new Particle.DustOptions(Color.fromRGB(0, 255, 0), 1.0F);;
@@ -24,10 +24,10 @@ public class HitboxRenderer {
     public static HitboxRenderer getInstance() {return INSTANCE;}
 
     private HitboxRenderer(Alchemy plugin) {
-        hitboxes = new CopyOnWriteArrayList<>();
+        objects = new CopyOnWriteArrayList<>();
         intersections = new CopyOnWriteArrayList<>();
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            HitboxRenderer.INSTANCE.hitboxes.forEach(Hitbox::render);
+            HitboxRenderer.INSTANCE.objects.forEach(o -> o.getHitboxes().forEach(Hitbox::render));
             World world = Bukkit.getWorld("world");
             intersections = findIntersections().stream().toList();
 
@@ -40,20 +40,24 @@ public class HitboxRenderer {
     private Set<Location> findIntersections() {
         World world = Bukkit.getWorld("world");
         Set<Location> intersections = new HashSet<>();
-        for (Hitbox hitbox : hitboxes) {
-            for (Hitbox hitbox2 : hitboxes) {
-                if (hitbox == hitbox2) continue;
+        for (GameObject object : objects) {
+            for (GameObject object2 : objects) {
+                if (object == object2) continue;
+                for (Hitbox hitbox : object.getHitboxes()) {
+                    for (Hitbox hitbox2 : object2.getHitboxes()) {
 
-                intersections.addAll(hitbox.intersect(hitbox2).stream()
-                        .map((v) -> new Location(world, v.x, v.y, v.z))
-                        .toList());
+                        intersections.addAll(hitbox.intersect(hitbox2).stream()
+                                .map((v) -> new Location(world, v.x, v.y, v.z))
+                                .toList());
+                    }
+                }
             }
         }
 
         return intersections;
     }
 
-    public void addHitbox(Hitbox hitbox) {
-        hitboxes.add(hitbox);
+    public void addHitbox(GameObject gameObject) {
+        objects.add(gameObject);
     }
 }

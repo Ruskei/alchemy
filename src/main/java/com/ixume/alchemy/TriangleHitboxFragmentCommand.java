@@ -32,7 +32,7 @@ public class TriangleHitboxFragmentCommand implements CommandExecutor {
         vertices.add(player.getLocation().clone());
         if (vertices.size() == 3) {
             System.out.println("reached 4 vertices");
-            HitboxRenderer.getInstance().addHitbox(new TriangleHitbox(vertices.toArray(new Location[0]), plugin));
+            HitboxRenderer.getInstance().addHitbox(new TriangleTestGameObject(new TriangleHitbox(vertices.toArray(new Location[0]), plugin)));
             vertices.clear();
         }
 

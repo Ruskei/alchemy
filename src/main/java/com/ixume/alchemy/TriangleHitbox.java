@@ -15,7 +15,7 @@ public class TriangleHitbox implements Hitbox {
     private Vector3d normal;
 
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
-    private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.4F);
+    private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.1F);
 
     public TriangleHitbox(Location[] vertices, Alchemy plugin) {
         this.vertices = vertices;
@@ -145,7 +145,7 @@ public class TriangleHitbox implements Hitbox {
                     min.y <= northIntersection.y && northIntersection.y <= max.y) {
                 intersections.add(northIntersection);
             }
-
+//
             Vector3d southIntersection = intersectVector(new Vector3d(0, 0, 1),
                     max,
                     edge,
@@ -155,13 +155,13 @@ public class TriangleHitbox implements Hitbox {
                     min.y <= southIntersection.y && southIntersection.y <= max.y) {
                 intersections.add(southIntersection);
             }
-
+//
             Vector3d westIntersection = intersectVector(new Vector3d(-1, 0, 0),
                     min,
                     edge,
                     vertex);
             if (westIntersection != null &&
-                    min.z <= westIntersection.z && westIntersection.x <= max.z &&
+                    min.z <= westIntersection.z && westIntersection.z <= max.z &&
                     min.y <= westIntersection.y && westIntersection.y <= max.y) {
                 intersections.add(westIntersection);
             }
@@ -171,10 +171,111 @@ public class TriangleHitbox implements Hitbox {
                     edge,
                     vertex);
             if (eastIntersection != null &&
-                    min.z <= eastIntersection.z && eastIntersection.x <= max.z &&
+                    min.z <= eastIntersection.z && eastIntersection.z <= max.z &&
                     min.y <= eastIntersection.y && eastIntersection.y <= max.y) {
                 intersections.add(eastIntersection);
             }
+        }
+
+        Vector3d trianglePlanePoint = vertices[0].toVector().toVector3d();
+
+        //bottom
+        Vector3d bottomSouth = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(0, 0, max.z - min.z),
+                min);
+        if (bottomSouth != null && inside(bottomSouth)) {
+            intersections.add(bottomSouth);
+        }
+
+        Vector3d bottomNorth = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(0, 0, min.z - max.z),
+                new Vector3d(max.x, min.y, max.z));
+        if (bottomNorth != null && inside(bottomNorth)) {
+            intersections.add(bottomNorth);
+        }
+
+        Vector3d bottomEast = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(min.x - max.x, 0, 0),
+                new Vector3d(max.x, min.y, max.z));
+        if (bottomEast != null && inside(bottomEast)) {
+            intersections.add(bottomEast);
+        }
+
+        Vector3d bottomWest = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(max.x - min.x, 0, 0),
+                min);
+        if (bottomWest != null && inside(bottomWest)) {
+            intersections.add(bottomWest);
+        }
+
+        //top
+        Vector3d topSouth = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(0, 0, max.z - min.z),
+                new Vector3d(min.x, max.y, min.z));
+        if (topSouth != null && inside(topSouth)) {
+            intersections.add(topSouth);
+        }
+
+        Vector3d topNorth = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(0, 0, min.z - max.z),
+                max);
+        if (topNorth != null && inside(topNorth)) {
+            intersections.add(topNorth);
+        }
+
+        Vector3d topEast = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(min.x - max.x, 0, 0),
+                max);
+        if (topEast != null && inside(topEast)) {
+            intersections.add(topEast);
+        }
+
+        Vector3d topWest = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(max.x - min.x, 0, 0),
+                new Vector3d(min.x, max.y, min.z));
+        if (topWest != null && inside(topWest)) {
+            intersections.add(topWest);
+        }
+
+        //sides
+        Vector3d northWest = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(0, max.y - min.y, 0),
+                min);
+        if (northWest != null && inside(northWest)) {
+            intersections.add(northWest);
+        }
+
+        Vector3d southWest = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(0, max.y - min.y, 0),
+                new Vector3d(min.x, min.y, max.z));
+        if (southWest != null && inside(southWest)) {
+            intersections.add(southWest);
+        }
+
+        Vector3d southEast = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(0, max.y - min.y, 0),
+                new Vector3d(max.x, min.y, max.z));
+        if (southEast != null && inside(southEast)) {
+            intersections.add(southEast);
+        }
+
+        Vector3d northEast = intersectVector(normal,
+                trianglePlanePoint,
+                new Vector3d(0, max.y - min.y, 0),
+                new Vector3d(max.x, min.y, min.z));
+        if (northEast != null && inside(northEast)) {
+            intersections.add(northEast);
         }
 
         return intersections;

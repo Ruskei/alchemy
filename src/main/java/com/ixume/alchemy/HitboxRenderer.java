@@ -13,7 +13,7 @@ public class HitboxRenderer {
     private volatile List<GameObject> objects;
     private volatile List<Location> intersections;
 
-    private final Particle.DustOptions intersectionDust = new Particle.DustOptions(Color.fromRGB(0, 255, 0), 1.0F);;
+    private final Particle.DustOptions intersectionDust = new Particle.DustOptions(Color.fromRGB(0, 255, 0), 0.5F);;
 
     private static HitboxRenderer INSTANCE;
     public static void init(Alchemy plugin) {
@@ -33,7 +33,7 @@ public class HitboxRenderer {
             intersections = findIntersections().stream().toList();
 
             for (Location intersection : HitboxRenderer.INSTANCE.intersections) {
-                world.spawnParticle(Particle.DUST, intersection, 1, intersectionDust);
+                world.spawnParticle(Particle.DUST, intersection, 5, intersectionDust);
             }
         }, 10, 1);
     }

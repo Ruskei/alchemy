@@ -1,6 +1,8 @@
 package com.ixume.alchemy;
 
 import org.bukkit.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import org.joml.Vector3d;
 
@@ -100,5 +102,93 @@ public class TriangleHitbox implements Hitbox {
         if (w.dot(u) < 0.001f) return false;
 
         return true;
+    }
+
+    public List<Vector3d> intersectEntity(Entity entity) {
+        List<Vector3d> intersections = new ArrayList<>();
+        BoundingBox boundingBox = entity.getBoundingBox();
+        Vector3d min = new Vector3d(Math.min(boundingBox.getMinX(), boundingBox.getMaxX()), Math.min(boundingBox.getMinY(), boundingBox.getMaxY()), Math.min(boundingBox.getMinZ(), boundingBox.getMaxZ()));
+        Vector3d max = new Vector3d(Math.max(boundingBox.getMinX(), boundingBox.getMaxX()), Math.max(boundingBox.getMinY(), boundingBox.getMaxY()), Math.max(boundingBox.getMinZ(), boundingBox.getMaxZ()));
+        //first part is colliding the triangle with the bounding box
+        //then collide the bounding box with the triangle
+        //first part needs the normal vectors and plane points and calculated for each edge
+        for (int i = 0; i < 3; i++) {
+            Vector3d vertex = vertices[i].toVector().toVector3d();
+            Vector3d edge = new Vector3d(edges[i]);
+
+            Vector3d bottomIntersection = intersectVector(new Vector3d(0, -1, 0),
+                    min,
+                    edge,
+                    vertex);
+            if (bottomIntersection != null &&
+                    min.x <= bottomIntersection.x && bottomIntersection.x <= max.x &&
+                    min.z <= bottomIntersection.z && bottomIntersection.z <= max.z) {
+                intersections.add(bottomIntersection);
+            }
+
+            Vector3d topIntersection = intersectVector(new Vector3d(0, 1, 0),
+                    max,
+                    edge,
+                    vertex);
+            if (topIntersection != null &&
+                    min.x <= topIntersection.x && topIntersection.x <= max.x &&
+                    min.z <= topIntersection.z && topIntersection.z <= max.z) {
+                intersections.add(topIntersection);
+            }
+
+            Vector3d northIntersection = intersectVector(new Vector3d(0, 0, -1),
+                    min,
+                    edge,
+                    vertex);
+            if (northIntersection != null &&
+                    min.x <= northIntersection.x && northIntersection.x <= max.x &&
+                    min.y <= northIntersection.y && northIntersection.y <= max.y) {
+                intersections.add(northIntersection);
+            }
+
+            Vector3d southIntersection = intersectVector(new Vector3d(0, 0, 1),
+                    max,
+                    edge,
+                    vertex);
+            if (southIntersection != null &&
+                    min.x <= southIntersection.x && southIntersection.x <= max.x &&
+                    min.y <= southIntersection.y && southIntersection.y <= max.y) {
+                intersections.add(southIntersection);
+            }
+
+            Vector3d westIntersection = intersectVector(new Vector3d(-1, 0, 0),
+                    min,
+                    edge,
+                    vertex);
+            if (westIntersection != null &&
+                    min.z <= westIntersection.z && westIntersection.x <= max.z &&
+                    min.y <= westIntersection.y && westIntersection.y <= max.y) {
+                intersections.add(westIntersection);
+            }
+
+            Vector3d eastIntersection = intersectVector(new Vector3d(1, 0, 0),
+                    max,
+                    edge,
+                    vertex);
+            if (eastIntersection != null &&
+                    min.z <= eastIntersection.z && eastIntersection.x <= max.z &&
+                    min.y <= eastIntersection.y && eastIntersection.y <= max.y) {
+                intersections.add(eastIntersection);
+            }
+        }
+
+        return intersections;
+    }
+
+    private Vector3d intersectVector(Vector3d planeNormal,
+                                     Vector3d planePoint,
+                                     Vector3d lineVector,
+                                     Vector3d linePoint) {
+        Vector3d normalizedLineVector = new Vector3d(lineVector).normalize();
+        double denominator = new Vector3d(planeNormal).dot(normalizedLineVector);
+        if (denominator == 0d) return null;
+        double factor = new Vector3d(planePoint.x - linePoint.x, planePoint.y - linePoint.y, planePoint.z - linePoint.z).dot(planeNormal) / denominator;
+        if (factor < 0d || factor > lineVector.length()) return null;
+        return new Vector3d(linePoint).add(normalizedLineVector.mul(factor));
     }
 }

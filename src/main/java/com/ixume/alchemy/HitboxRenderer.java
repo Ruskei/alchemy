@@ -1,6 +1,7 @@
 package com.ixume.alchemy;
 
 import org.bukkit.*;
+import org.bukkit.entity.Entity;
 
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,12 @@ public class HitboxRenderer {
                                 .map((v) -> new Location(world, v.x, v.y, v.z))
                                 .toList());
                     }
+                }
+            }
+
+            for (Entity entity : world.getEntities()) {
+                if (object instanceof TriangleTestGameObject triObject) {
+                    intersections.addAll(((TriangleHitbox) triObject.getHitboxes().get(0)).intersectEntity(entity).stream().map(v -> new Location(world, v.x, v.y, v.z)).toList());
                 }
             }
         }

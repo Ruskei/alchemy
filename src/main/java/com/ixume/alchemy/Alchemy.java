@@ -1,5 +1,8 @@
 package com.ixume.alchemy;
 
+import com.ixume.alchemy.command.TriangleHitboxFragmentCommand;
+import com.ixume.alchemy.command.VirtualBlockDisplayCommand;
+import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.listener.PlayerInteractListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -10,8 +13,7 @@ public final class Alchemy extends JavaPlugin {
 
         TriangleHitboxFragmentCommand.init(this);
         VirtualBlockDisplayCommand.init(this);
-        BoundingBoxTestCommand.init(this);
 
-        HitboxRenderer.init(this);
+        GameObjectTicker.init(this);
     }
 }

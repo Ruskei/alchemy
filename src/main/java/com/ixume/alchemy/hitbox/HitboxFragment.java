@@ -1,7 +1,6 @@
-package com.ixume.alchemy;
+package com.ixume.alchemy.hitbox;
 
 import org.bukkit.*;
-import org.bukkit.entity.Entity;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import org.joml.Vector3d;
@@ -9,46 +8,35 @@ import org.joml.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TriangleHitbox implements Hitbox {
-    private Location[] vertices;
+public class HitboxFragment {
+    private Vector3d[] vertices;
     private Vector3d[] edges;
     private Vector3d normal;
 
+    public HitboxFragment(Vector3d[] vertices, Vector3d[] edges, Vector3d normal) {
+        this.vertices = vertices;
+        this.edges = edges;
+        this.normal = normal;
+    }
+
+    public Vector3d[] getVertices() {
+        return vertices;
+    }
+
+    public Vector3d[] getEdges() {
+        return edges;
+    }
+
+    public Vector3d planePoint() {
+        return new Vector3d(vertices[1]);
+    }
+
+    public Vector3d normal() {
+        return new Vector3d(normal);
+    }
+
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
     private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.1F);
-
-    public TriangleHitbox(Location[] vertices, Alchemy plugin) {
-        this.vertices = vertices;
-        edges = new Vector3d[3];
-        for (int i = 0; i < 3; i++) {
-            edges[i] = vertices[(i + 1) % 3].toVector().toVector3d().sub(vertices[i].toVector().toVector3d());
-        }
-
-        normal = new Vector3d(edges[0]).cross(edges[1]).normalize();
-
-        Bukkit.getScheduler().runTaskTimer(plugin, this::render, 1, 1);
-    }
-
-    public List<Vector3d> intersect(Hitbox hitbox) {
-        List<Vector3d> intersections = new ArrayList<>();
-        Vector3d planePoint = hitbox.planePoint();
-        for (int i = 0; i < edges.length; i++) {
-            Vector3d edge = edges[i];
-            Vector3d edgeUnitVector = new Vector3d(edge).normalize();
-            Vector3d edgePoint = vertices[i].toVector().toVector3d();
-            double factor = (new Vector3d(planePoint).sub(edgePoint)).dot(hitbox.normal())/(new Vector3d(edgeUnitVector).dot(hitbox.normal()));
-            if (factor < 0d || factor > edge.length()) {
-                continue;
-            }
-
-            Vector3d intersection = edgePoint.add(new Vector3d(edgeUnitVector).mul(factor));
-            if (hitbox.inside(intersection)) {
-                intersections.add(intersection);
-            }
-        }
-
-        return intersections;
-    }
 
     public void render() {
         World world = Bukkit.getServer().getWorld("world");
@@ -58,7 +46,7 @@ public class TriangleHitbox implements Hitbox {
             Vector3d normalizedEdge = new Vector3d(edge);
             normalizedEdge.normalize();
             for (double d = 0; d < edge.length(); d += INTERVAL) {
-                Location particleLocation = vertices[i].clone();
+                Location particleLocation = new Location(world, vertices[i].x, vertices[i].y, vertices[i].z);
                 Vector3d fractionalEdge = new Vector3d(normalizedEdge).mul(d);
                 particleLocation.add(new Vector(fractionalEdge.x, fractionalEdge.y, fractionalEdge.z));
                 world.spawnParticle(Particle.DUST, particleLocation, 1, edgeDust);
@@ -66,54 +54,46 @@ public class TriangleHitbox implements Hitbox {
         }
 
         for (double d = 0; d < 1; d += INTERVAL) {
-            Location particleLocation = vertices[1].clone();
+            Location particleLocation = new Location(world, vertices[1].x, vertices[1].y, vertices[1].z);
             Vector3d fractionalEdge = new Vector3d(normal).mul(d);
             particleLocation.add(new Vector(fractionalEdge.x, fractionalEdge.y, fractionalEdge.z));
             world.spawnParticle(Particle.DUST, particleLocation, 1, normalDust);
         }
     }
 
-    @Override
-    public Vector3d planePoint() {
-        return vertices[1].toVector().toVector3d();
-    }
-
-    @Override
-    public Vector3d normal() {
-        return normal;
-    }
-
-    @Override
-    public boolean inside(Vector3d point) {
-        Vector3d p = new Vector3d(point);
-        Vector3d a = new Vector3d(vertices[0].toVector().toVector3d());
-        Vector3d b = new Vector3d(vertices[1].toVector().toVector3d());
-        Vector3d c = new Vector3d(vertices[2].toVector().toVector3d());
-
-        a.sub(p);
-        b.sub(p);
-        c.sub(p);
-
-        Vector3d u = new Vector3d(b).cross(c);
-        Vector3d v = c.cross(a);
-        Vector3d w = a.cross(b);
-
-        if (v.dot(u) < 0.001f) return false;
-        if (w.dot(u) < 0.001f) return false;
-
-        return true;
-    }
-
-    public List<Vector3d> intersectEntity(Entity entity) {
+    public List<Vector3d> intersect(HitboxFragmentImpl hitboxFragment) {
         List<Vector3d> intersections = new ArrayList<>();
-        BoundingBox boundingBox = entity.getBoundingBox();
+        Vector3d planePoint = hitboxFragment.planePoint();
+        for (int i = 0; i < edges.length; i++) {
+            Vector3d edge = edges[i];
+            Vector3d edgeUnitVector = new Vector3d(edge).normalize();
+            Vector3d edgePoint = new Vector3d(vertices[i]);
+            double factor = (new Vector3d(planePoint).sub(edgePoint)).dot(hitboxFragment.normal())/(new Vector3d(edgeUnitVector).dot(hitboxFragment.normal()));
+            if (factor < 0d || factor > edge.length()) {
+                continue;
+            }
+
+            Vector3d intersection = edgePoint.add(new Vector3d(edgeUnitVector).mul(factor));
+            if (hitboxFragment.inside(intersection)) {
+                intersections.add(intersection);
+            }
+        }
+
+        return intersections;
+    }
+
+    public List<Vector3d> intersect(BoundingBox boundingBox,
+                                           HitboxFragmentImpl fragment) {
+        List<Vector3d> intersections = new ArrayList<>();
         Vector3d min = new Vector3d(Math.min(boundingBox.getMinX(), boundingBox.getMaxX()), Math.min(boundingBox.getMinY(), boundingBox.getMaxY()), Math.min(boundingBox.getMinZ(), boundingBox.getMaxZ()));
         Vector3d max = new Vector3d(Math.max(boundingBox.getMinX(), boundingBox.getMaxX()), Math.max(boundingBox.getMinY(), boundingBox.getMaxY()), Math.max(boundingBox.getMinZ(), boundingBox.getMaxZ()));
         //first part is colliding the triangle with the bounding box
         //then collide the bounding box with the triangle
         //first part needs the normal vectors and plane points and calculated for each edge
-        for (int i = 0; i < 3; i++) {
-            Vector3d vertex = vertices[i].toVector().toVector3d();
+        //first part is not unique in the slightest and just works per edge, this is the same for all hitbox fragments
+        //second part differs only in the "isInside" methods
+        for (int i = 0; i < edges.length; i++) {
+            Vector3d vertex = new Vector3d(vertices[i]);
             Vector3d edge = new Vector3d(edges[i]);
 
             Vector3d bottomIntersection = intersectVector(new Vector3d(0, -1, 0),
@@ -145,7 +125,7 @@ public class TriangleHitbox implements Hitbox {
                     min.y <= northIntersection.y && northIntersection.y <= max.y) {
                 intersections.add(northIntersection);
             }
-//
+
             Vector3d southIntersection = intersectVector(new Vector3d(0, 0, 1),
                     max,
                     edge,
@@ -155,7 +135,7 @@ public class TriangleHitbox implements Hitbox {
                     min.y <= southIntersection.y && southIntersection.y <= max.y) {
                 intersections.add(southIntersection);
             }
-//
+
             Vector3d westIntersection = intersectVector(new Vector3d(-1, 0, 0),
                     min,
                     edge,
@@ -177,14 +157,14 @@ public class TriangleHitbox implements Hitbox {
             }
         }
 
-        Vector3d trianglePlanePoint = vertices[0].toVector().toVector3d();
+        Vector3d trianglePlanePoint = fragment.planePoint();
 
         //bottom
         Vector3d bottomSouth = intersectVector(normal,
                 trianglePlanePoint,
                 new Vector3d(0, 0, max.z - min.z),
                 min);
-        if (bottomSouth != null && inside(bottomSouth)) {
+        if (bottomSouth != null && fragment.inside(bottomSouth)) {
             intersections.add(bottomSouth);
         }
 
@@ -192,7 +172,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(0, 0, min.z - max.z),
                 new Vector3d(max.x, min.y, max.z));
-        if (bottomNorth != null && inside(bottomNorth)) {
+        if (bottomNorth != null && fragment.inside(bottomNorth)) {
             intersections.add(bottomNorth);
         }
 
@@ -200,7 +180,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(min.x - max.x, 0, 0),
                 new Vector3d(max.x, min.y, max.z));
-        if (bottomEast != null && inside(bottomEast)) {
+        if (bottomEast != null && fragment.inside(bottomEast)) {
             intersections.add(bottomEast);
         }
 
@@ -208,7 +188,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(max.x - min.x, 0, 0),
                 min);
-        if (bottomWest != null && inside(bottomWest)) {
+        if (bottomWest != null && fragment.inside(bottomWest)) {
             intersections.add(bottomWest);
         }
 
@@ -217,7 +197,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(0, 0, max.z - min.z),
                 new Vector3d(min.x, max.y, min.z));
-        if (topSouth != null && inside(topSouth)) {
+        if (topSouth != null && fragment.inside(topSouth)) {
             intersections.add(topSouth);
         }
 
@@ -225,7 +205,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(0, 0, min.z - max.z),
                 max);
-        if (topNorth != null && inside(topNorth)) {
+        if (topNorth != null && fragment.inside(topNorth)) {
             intersections.add(topNorth);
         }
 
@@ -233,7 +213,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(min.x - max.x, 0, 0),
                 max);
-        if (topEast != null && inside(topEast)) {
+        if (topEast != null && fragment.inside(topEast)) {
             intersections.add(topEast);
         }
 
@@ -241,7 +221,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(max.x - min.x, 0, 0),
                 new Vector3d(min.x, max.y, min.z));
-        if (topWest != null && inside(topWest)) {
+        if (topWest != null && fragment.inside(topWest)) {
             intersections.add(topWest);
         }
 
@@ -250,7 +230,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(0, max.y - min.y, 0),
                 min);
-        if (northWest != null && inside(northWest)) {
+        if (northWest != null && fragment.inside(northWest)) {
             intersections.add(northWest);
         }
 
@@ -258,7 +238,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(0, max.y - min.y, 0),
                 new Vector3d(min.x, min.y, max.z));
-        if (southWest != null && inside(southWest)) {
+        if (southWest != null && fragment.inside(southWest)) {
             intersections.add(southWest);
         }
 
@@ -266,7 +246,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(0, max.y - min.y, 0),
                 new Vector3d(max.x, min.y, max.z));
-        if (southEast != null && inside(southEast)) {
+        if (southEast != null && fragment.inside(southEast)) {
             intersections.add(southEast);
         }
 
@@ -274,7 +254,7 @@ public class TriangleHitbox implements Hitbox {
                 trianglePlanePoint,
                 new Vector3d(0, max.y - min.y, 0),
                 new Vector3d(max.x, min.y, min.z));
-        if (northEast != null && inside(northEast)) {
+        if (northEast != null && fragment.inside(northEast)) {
             intersections.add(northEast);
         }
 
@@ -282,9 +262,9 @@ public class TriangleHitbox implements Hitbox {
     }
 
     private Vector3d intersectVector(Vector3d planeNormal,
-                                     Vector3d planePoint,
-                                     Vector3d lineVector,
-                                     Vector3d linePoint) {
+                                            Vector3d planePoint,
+                                            Vector3d lineVector,
+                                            Vector3d linePoint) {
         Vector3d normalizedLineVector = new Vector3d(lineVector).normalize();
         double denominator = new Vector3d(planeNormal).dot(normalizedLineVector);
         if (denominator == 0d) return null;

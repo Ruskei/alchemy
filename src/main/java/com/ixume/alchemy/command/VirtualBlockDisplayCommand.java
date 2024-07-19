@@ -1,5 +1,7 @@
-package com.ixume.alchemy;
+package com.ixume.alchemy.command;
 
+import com.ixume.alchemy.Alchemy;
+import com.ixume.alchemy.VirtualBlockDisplay;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

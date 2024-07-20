@@ -60,11 +60,14 @@ public class VirtualBlockDisplay implements GameObject, Hitbox {
         vertices.add(new Vector3d(0, 1, 1));
 
         Transformation transformation = blockDisplay.getTransformation();
-        Matrix3d matrix = new Matrix3d();
-        transformation.getLeftRotation().get(matrix);
+        Matrix3d leftRotation = new Matrix3d();
+        transformation.getLeftRotation().get(leftRotation);
+        Matrix3d rightRotation = new Matrix3d();
+        transformation.getRightRotation().get(rightRotation);
+        Vector3d scale = new Vector3d(transformation.getScale());
 
         vertices = vertices.stream().map(k ->
-                k.mul(matrix).add(transformation.getTranslation()).add(originVector)).toList();
+                k.mul(rightRotation).mul(scale).mul(leftRotation).add(transformation.getTranslation()).add(originVector)).toList();
 
         fragments.add(new ParallelogramHitboxFragment(vertices.get(0), new Vector3d(vertices.get(1)).sub(vertices.get(0)), new Vector3d(vertices.get(3)).sub(vertices.get(0))));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(1), new Vector3d(vertices.get(2)).sub(vertices.get(1)), new Vector3d(vertices.get(5)).sub(vertices.get(1))));

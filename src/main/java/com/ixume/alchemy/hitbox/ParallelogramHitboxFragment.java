@@ -8,14 +8,12 @@ import java.util.List;
 
 public class ParallelogramHitboxFragment implements HitboxFragmentImpl {
     private final HitboxFragment fragment;
-    private final Vector3d pointC;
-    private final Vector3d pointB;
     private final Vector3d origin;
     private final Matrix3d basisChangeMatrix;
     public ParallelogramHitboxFragment(Vector3d origin, Vector3d edge1, Vector3d edge2) {
         this.origin = new Vector3d(origin);
-        this.pointC = new Vector3d(origin).add(edge1);
-        this.pointB = new Vector3d(origin).add(edge2);
+        Vector3d pointC = new Vector3d(origin).add(edge1);
+        Vector3d pointB = new Vector3d(origin).add(edge2);
         Vector3d[] edges = new Vector3d[]{new Vector3d(edge1).mul(-1), edge2};
         Vector3d[] vertices = new Vector3d[]{new Vector3d(origin).add(edge1), new Vector3d(origin)};
         fragment = new HitboxFragment(vertices, edges, new Vector3d(edge1).cross(edge2));

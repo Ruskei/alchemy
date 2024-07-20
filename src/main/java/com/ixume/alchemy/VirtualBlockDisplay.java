@@ -1,7 +1,12 @@
 package com.ixume.alchemy;
 
+import com.ixume.alchemy.gameobject.GameObject;
+import com.ixume.alchemy.hitbox.Hitbox;
+import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
+import com.ixume.alchemy.hitbox.ParallelogramHitboxFragment;
 import org.bukkit.*;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Transformation;
 import org.joml.Matrix3d;
 import org.joml.Quaterniond;
@@ -10,12 +15,14 @@ import org.joml.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VirtualBlockDisplay {
+public class VirtualBlockDisplay implements GameObject, Hitbox {
+    private final List<HitboxFragmentImpl> fragments;
     private List<Vector3d> vertices;
 
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
 
     public VirtualBlockDisplay(Location origin, Alchemy plugin) {
+        fragments = new ArrayList<>();
         Vector3d originVector = origin.clone().toVector().toVector3d();
         vertices = new ArrayList<>();
         vertices.add(new Vector3d(0, 0, 0));
@@ -39,6 +46,7 @@ public class VirtualBlockDisplay {
     }
 
     public VirtualBlockDisplay(BlockDisplay blockDisplay, Alchemy plugin) {
+        fragments = new ArrayList<>();
         Vector3d originVector = blockDisplay.getLocation().toVector().toVector3d();
         vertices = new ArrayList<>();
         vertices.add(new Vector3d(0, 0, 0));
@@ -58,9 +66,12 @@ public class VirtualBlockDisplay {
         vertices = vertices.stream().map(k ->
                 k.mul(matrix).add(transformation.getTranslation()).add(originVector)).toList();
 
-//        HitboxRenderer.getInstance().addHitbox();
-
-        Bukkit.getScheduler().runTaskTimer(plugin, this::render, 1, 1);
+        fragments.add(new ParallelogramHitboxFragment(vertices.get(0), new Vector3d(vertices.get(1)).sub(vertices.get(0)), new Vector3d(vertices.get(3)).sub(vertices.get(0))));
+        fragments.add(new ParallelogramHitboxFragment(vertices.get(1), new Vector3d(vertices.get(2)).sub(vertices.get(1)), new Vector3d(vertices.get(5)).sub(vertices.get(1))));
+        fragments.add(new ParallelogramHitboxFragment(vertices.get(2), new Vector3d(vertices.get(3)).sub(vertices.get(2)), new Vector3d(vertices.get(6)).sub(vertices.get(2))));
+        fragments.add(new ParallelogramHitboxFragment(vertices.get(7), new Vector3d(vertices.get(3)).sub(vertices.get(7)), new Vector3d(vertices.get(4)).sub(vertices.get(7))));
+        fragments.add(new ParallelogramHitboxFragment(vertices.get(4), new Vector3d(vertices.get(0)).sub(vertices.get(4)), new Vector3d(vertices.get(5)).sub(vertices.get(4))));
+        fragments.add(new ParallelogramHitboxFragment(vertices.get(6), new Vector3d(vertices.get(5)).sub(vertices.get(6)), new Vector3d(vertices.get(7)).sub(vertices.get(6))));
     }
 
     private void render() {
@@ -83,10 +94,34 @@ public class VirtualBlockDisplay {
     private void connect(Vector3d a, Vector3d b) {
         World world = Bukkit.getServer().getWorld("world");
         Vector3d diff = new Vector3d(b).sub(a);
-        for (double d = 0; d < 1d; d += 0.02) {
+        for (double d = 0; d < 1d; d += 0.1) {
             Vector3d n = new Vector3d(a).add(new Vector3d(diff).mul(d));
             Location particleLocation = new Location(world, n.x, n.y, n.z);
             world.spawnParticle(Particle.DUST, particleLocation, 1, edgeDust);
         }
+    }
+
+    @Override
+    public List<Vector3d> collide(Hitbox hitbox) {
+        List<Vector3d> intersections = new ArrayList<>();
+        for (HitboxFragmentImpl frag1 : fragments) {
+            for (HitboxFragmentImpl frag2 : hitbox.getFragments()) {
+                intersections.addAll(frag1.intersect(frag2));
+            }
+        }
+
+        return intersections;
+    }
+
+    @Override
+    public List<HitboxFragmentImpl> getFragments() {
+        return fragments;
+    }
+
+    @Override
+    public List<Vector3d> collide(BoundingBox box) {
+        List<Vector3d> collisions = new ArrayList<>();
+        fragments.forEach(f -> collisions.addAll(f.intersect(box)));
+        return collisions;
     }
 }

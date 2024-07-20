@@ -5,6 +5,7 @@ import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 
 import java.util.HashSet;
 import java.util.List;
@@ -47,7 +48,15 @@ public class GameObjectTicker {
         for (GameObject object : objects) {
             if (object instanceof Hitbox hitbox) {
                 for (Entity entity : world.getEntities()) {
+                    if (entity.getType().equals(EntityType.BLOCK_DISPLAY)) continue;
                     intersections.addAll(hitbox.collide(entity.getBoundingBox()).stream().map(v -> new Location(world, v.x, v.y, v.z)).toList());
+                }
+
+                for (GameObject object2 : objects) {
+                    if (object == object2) continue;
+                    if (object2 instanceof Hitbox hitbox2) {
+                        intersections.addAll(hitbox.collide(hitbox2).stream().map(v -> new Location(world, v.x, v.y, v.z)).toList());
+                    }
                 }
             }
         }

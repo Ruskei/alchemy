@@ -17,8 +17,6 @@ public class TriangleHitboxFragment implements HitboxFragmentImpl {
         }
 
         fragment = new HitboxFragment(vertices, edges, new Vector3d(edges[0]).cross(edges[1]).normalize());
-
-        Bukkit.getScheduler().runTaskTimer(plugin, this::render, 1, 1);
     }
 
     public List<Vector3d> intersect(HitboxFragmentImpl hitboxFragment) {

@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HitboxFragment {
-    private Vector3d[] vertices;
-    private Vector3d[] edges;
-    private Vector3d normal;
+    private final Vector3d[] vertices;
+    private final Vector3d[] edges;
+    private final Vector3d normal;
 
     public HitboxFragment(Vector3d[] vertices, Vector3d[] edges, Vector3d normal) {
         this.vertices = vertices;
@@ -41,7 +41,7 @@ public class HitboxFragment {
     public void render() {
         World world = Bukkit.getServer().getWorld("world");
         double INTERVAL = 0.2;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < edges.length; i++) {
             Vector3d edge = edges[i];
             Vector3d normalizedEdge = new Vector3d(edge);
             normalizedEdge.normalize();

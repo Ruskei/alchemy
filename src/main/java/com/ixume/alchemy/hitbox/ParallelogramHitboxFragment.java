@@ -1,6 +1,5 @@
 package com.ixume.alchemy.hitbox;
 
-import com.ixume.alchemy.Alchemy;
 import org.bukkit.util.BoundingBox;
 import org.joml.Matrix3d;
 import org.joml.Vector3d;
@@ -12,15 +11,20 @@ public class ParallelogramHitboxFragment implements HitboxFragmentImpl {
     private final Vector3d pointC;
     private final Vector3d pointB;
     private final Vector3d origin;
-    private Vector3d testVector;
+    private final Matrix3d basisChangeMatrix;
     public ParallelogramHitboxFragment(Vector3d origin, Vector3d edge1, Vector3d edge2) {
-        testVector = new Vector3d();
         this.origin = new Vector3d(origin);
         this.pointC = new Vector3d(origin).add(edge1);
         this.pointB = new Vector3d(origin).add(edge2);
         Vector3d[] edges = new Vector3d[]{new Vector3d(edge1).mul(-1), edge2};
         Vector3d[] vertices = new Vector3d[]{new Vector3d(origin).add(edge1), new Vector3d(origin)};
         fragment = new HitboxFragment(vertices, edges, new Vector3d(edge1).cross(edge2));
+
+        basisChangeMatrix = new Matrix3d(
+                pointB.x - origin.x, pointB.y - origin.y, pointB.z - origin.z,
+                pointC.x - origin.x, pointC.y - origin.y, pointC.z - origin.z,
+                (pointB.y - origin.y) * (pointC.z - origin.z) - (pointC.y - origin.y) * (pointB.z - origin.z), 1, (pointB.x - origin.x) * (pointC.y - origin.y) - (pointC.x - origin.x) * (pointB.y - origin.y));
+        basisChangeMatrix.invert();
     }
 
     @Override
@@ -35,18 +39,8 @@ public class ParallelogramHitboxFragment implements HitboxFragmentImpl {
 
     @Override
     public boolean inside(Vector3d point) {
-//        System.out.println("point: " + point);
-//        System.out.println("origin: " + origin);
-//        System.out.println("b: " + pointB);
-//        System.out.println("c: " + pointC);
-        Matrix3d a = new Matrix3d(
-                pointB.x - origin.x, pointB.y - origin.y, pointB.z - origin.z,
-                pointC.x - origin.x, pointC.y - origin.y, pointC.z - origin.z,
-                (pointB.y - origin.y) * (pointC.z - origin.z) - (pointC.y - origin.y) * (pointB.z - origin.z), 1, (pointB.x - origin.x) * (pointC.y - origin.y) - (pointC.x - origin.x) * (pointB.y - origin.y));
-        a.invert();
         Vector3d b = new Vector3d(point).sub(origin);
-
-        b.mul(a);
+        b.mul(basisChangeMatrix);
 
         return (0 <= b.x && b.x <= 1 && 0 <= b.y && b.y <= 1);
     }

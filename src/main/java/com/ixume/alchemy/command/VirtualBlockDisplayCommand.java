@@ -40,7 +40,7 @@ public class VirtualBlockDisplayCommand implements CommandExecutor {
             }
 
             if (c != null) {
-                GameObjectTicker.getInstance().addHitbox(new VirtualBlockDisplay(c, plugin));
+                GameObjectTicker.getInstance().addHitbox(new VirtualBlockDisplay(c.getLocation().toVector().toVector3d(), c.getTransformation()));
             }
         }
 

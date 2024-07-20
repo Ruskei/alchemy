@@ -39,4 +39,9 @@ public class TriangleTestGameObject implements GameObject, Hitbox {
         hitboxFragments.forEach(f -> collisions.addAll(f.intersect(box)));
         return collisions;
     }
+
+    @Override
+    public void tick() {
+
+    }
 }

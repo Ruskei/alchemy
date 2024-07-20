@@ -8,10 +8,9 @@ import org.bukkit.*;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Transformation;
-import org.joml.Matrix3d;
-import org.joml.Quaterniond;
-import org.joml.Vector3d;
+import org.joml.*;
 
+import java.lang.Math;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,14 +57,9 @@ public class VirtualBlockDisplay implements GameObject, Hitbox {
         vertices.add(new Vector3d(1, 1, 1));
         vertices.add(new Vector3d(0, 1, 1));
 
-        Matrix3d leftRotation = new Matrix3d();
-        transformation.getLeftRotation().get(leftRotation);
-        Matrix3d rightRotation = new Matrix3d();
-        transformation.getRightRotation().get(rightRotation);
-        Vector3d scale = new Vector3d(transformation.getScale());
-
-        vertices = vertices.stream().map(k ->
-                k.mul(rightRotation).mul(scale).mul(leftRotation).add(transformation.getTranslation()).add(origin)).toList();
+        DisplayTransformation displayTransformation = new DisplayTransformation(transformation);
+        Matrix4f finalMatrix = displayTransformation.getMatrix();
+        vertices = vertices.stream().map(k -> finalMatrix.transform(new Vector4f((float) k.x, (float) k.y, (float) k.z, 1f))).map(k -> new Vector3d(origin.x + k.x, origin.y + k.y, origin.z + k.z)).toList();
 
         fragments.add(new ParallelogramHitboxFragment(vertices.get(0), new Vector3d(vertices.get(1)).sub(vertices.get(0)), new Vector3d(vertices.get(3)).sub(vertices.get(0))));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(1), new Vector3d(vertices.get(2)).sub(vertices.get(1)), new Vector3d(vertices.get(5)).sub(vertices.get(1))));
@@ -124,5 +118,10 @@ public class VirtualBlockDisplay implements GameObject, Hitbox {
         List<Vector3d> collisions = new ArrayList<>();
         fragments.forEach(f -> collisions.addAll(f.intersect(box)));
         return collisions;
+    }
+
+    @Override
+    public void tick() {
+
     }
 }

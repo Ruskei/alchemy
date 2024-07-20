@@ -46,6 +46,7 @@ public class GameObjectTicker {
         World world = Bukkit.getWorld("world");
         Set<Location> intersections = new HashSet<>();
         for (GameObject object : objects) {
+            object.tick();
             if (object instanceof Hitbox hitbox) {
                 for (Entity entity : world.getEntities()) {
                     if (entity.getType().equals(EntityType.BLOCK_DISPLAY)) continue;

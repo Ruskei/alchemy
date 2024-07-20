@@ -45,9 +45,8 @@ public class VirtualBlockDisplay implements GameObject, Hitbox {
         Bukkit.getScheduler().runTaskTimer(plugin, this::render, 1, 1);
     }
 
-    public VirtualBlockDisplay(BlockDisplay blockDisplay, Alchemy plugin) {
+    public VirtualBlockDisplay(Vector3d origin, Transformation transformation) {
         fragments = new ArrayList<>();
-        Vector3d originVector = blockDisplay.getLocation().toVector().toVector3d();
         vertices = new ArrayList<>();
         vertices.add(new Vector3d(0, 0, 0));
         vertices.add(new Vector3d(1, 0, 0));
@@ -59,7 +58,6 @@ public class VirtualBlockDisplay implements GameObject, Hitbox {
         vertices.add(new Vector3d(1, 1, 1));
         vertices.add(new Vector3d(0, 1, 1));
 
-        Transformation transformation = blockDisplay.getTransformation();
         Matrix3d leftRotation = new Matrix3d();
         transformation.getLeftRotation().get(leftRotation);
         Matrix3d rightRotation = new Matrix3d();
@@ -67,7 +65,7 @@ public class VirtualBlockDisplay implements GameObject, Hitbox {
         Vector3d scale = new Vector3d(transformation.getScale());
 
         vertices = vertices.stream().map(k ->
-                k.mul(rightRotation).mul(scale).mul(leftRotation).add(transformation.getTranslation()).add(originVector)).toList();
+                k.mul(rightRotation).mul(scale).mul(leftRotation).add(transformation.getTranslation()).add(origin)).toList();
 
         fragments.add(new ParallelogramHitboxFragment(vertices.get(0), new Vector3d(vertices.get(1)).sub(vertices.get(0)), new Vector3d(vertices.get(3)).sub(vertices.get(0))));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(1), new Vector3d(vertices.get(2)).sub(vertices.get(1)), new Vector3d(vertices.get(5)).sub(vertices.get(1))));

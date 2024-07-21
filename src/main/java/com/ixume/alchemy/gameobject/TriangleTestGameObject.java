@@ -3,6 +3,7 @@ package com.ixume.alchemy.gameobject;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import com.ixume.alchemy.hitbox.TriangleHitboxFragment;
+import org.bukkit.entity.Entity;
 import org.bukkit.util.BoundingBox;
 import org.joml.Vector3d;
 
@@ -34,9 +35,9 @@ public class TriangleTestGameObject implements GameObject, Hitbox {
     }
 
     @Override
-    public List<Vector3d> collide(BoundingBox box) {
+    public List<Vector3d> collide(Entity box) {
         List<Vector3d> collisions = new ArrayList<>();
-        hitboxFragments.forEach(f -> collisions.addAll(f.intersect(box)));
+        hitboxFragments.forEach(f -> collisions.addAll(f.intersect(box.getBoundingBox())));
         return collisions;
     }
 

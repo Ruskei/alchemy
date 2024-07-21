@@ -1,7 +1,7 @@
 package com.ixume.alchemy.command;
 
 import com.ixume.alchemy.Alchemy;
-import com.ixume.alchemy.VirtualBlockDisplay;
+import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -40,7 +40,7 @@ public class VirtualBlockDisplayCommand implements CommandExecutor {
             }
 
             if (c != null) {
-                GameObjectTicker.getInstance().addHitbox(new VirtualBlockDisplay(c.getLocation().toVector().toVector3d(), c.getTransformation()));
+                GameObjectTicker.getInstance().addHitbox(new DisplayHitbox(c.getLocation().toVector().toVector3d(), c.getTransformation()));
             }
         }
 

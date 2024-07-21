@@ -1,6 +1,6 @@
 package com.ixume.alchemy.hitbox;
 
-import org.bukkit.util.BoundingBox;
+import org.bukkit.entity.Entity;
 import org.joml.Vector3d;
 
 import java.util.List;
@@ -10,5 +10,5 @@ public interface Hitbox {
     List<Vector3d> collide(Hitbox hitbox);
     List<HitboxFragmentImpl> getFragments();
 
-    List<Vector3d> collide(BoundingBox box);
+    List<Vector3d> collide(Entity entity);
 }

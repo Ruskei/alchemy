@@ -55,6 +55,6 @@ public class ParallelogramHitboxFragment implements HitboxFragmentImpl {
 
     @Override
     public void render() {
-        fragment.render();
+//        fragment.render();
     }
 }

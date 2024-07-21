@@ -1,10 +1,16 @@
 package com.ixume.alchemy.gameobject;
 
+import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.DisplayTransformation;
+import com.ixume.alchemy.hitbox.Hitbox;
+import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Transformation;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
@@ -14,9 +20,7 @@ import org.joml.Vector3fc;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Spike implements GameObject {
-    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
-
+public class Spike implements GameObject, Hitbox {
     private static final int LENGTH = 8;
     private static final int SMOOTH_OFFSET = 2;
     private static final int GROUND_PADDING = 2;
@@ -28,10 +32,12 @@ public class Spike implements GameObject {
     private final BlockData blockData;
     private final Vector3f dir;
     private final Matrix4f defaultTransformationMatrix;
-    private final Vector3d originalOrigin;
+
+    private final DisplayHitbox hitbox;
+    private boolean dealtDamage;
 
     public Spike(Vector3f spikeOrigin, Vector3f target, BlockData blockData, Player player) {
-        originalOrigin = new Vector3d(spikeOrigin);
+        dealtDamage = false;
         displays = new ArrayList<>();
         progress = 0;
         world = player.getWorld();
@@ -42,8 +48,6 @@ public class Spike implements GameObject {
         Vector3f spikeDir = new Vector3f(target).sub(spikeOrigin);
         Vector3f IDENTITY = new Vector3f(0, 1f, 0);
         transformation.leftRotation.rotateTo(IDENTITY, spikeDir);
-//        transformation.leftRotation.rotateY((float) (-yaw * Math.PI / 180f));
-//        transformation.leftRotation.rotateX((float) (50 * Math.PI / 180f));
 
         Vector3f v = new Vector3f(0.5f, 0.5f, 0.5f);
         v.rotate(transformation.rightRotation).rotate(transformation.leftRotation);
@@ -58,7 +62,8 @@ public class Spike implements GameObject {
 
         defaultTransformationMatrix = transformation.getMatrix();
 
-//        Matrix4f hitboxMatrix = new Matrix4f(this.defaultTransformationMatrix).scale(1, LENGTH, 1).translateLocal(0, -GROUND_PADDING, 0);
+        Matrix4f hitboxMatrix = new Matrix4f(this.defaultTransformationMatrix).scale(1, LENGTH, 1).translateLocal(0, -GROUND_PADDING, 0);
+        hitbox = new DisplayHitbox(origin, hitboxMatrix);
     }
 
     private void spawnBlock() {
@@ -81,12 +86,37 @@ public class Spike implements GameObject {
 
     @Override
     public void tick() {
-        world.spawnParticle(Particle.DUST, new Location(world, originalOrigin.x, originalOrigin.y, originalOrigin.z), 5, edgeDust);
         if (progress < LENGTH + 1) {
             if (progress < LENGTH) spawnBlock();
             if (progress > 0) updateBlocks();
         }
 
         progress++;
+    }
+
+    @Override
+    public List<Vector3d> collide(Hitbox hitbox) {
+        return this.hitbox.collide(hitbox);
+    }
+
+    @Override
+    public List<HitboxFragmentImpl> getFragments() {
+        return hitbox.getFragments();
+    }
+
+    @Override
+    public List<Vector3d> collide(Entity entity) {
+        final List<Vector3d> collisions = this.hitbox.collide(entity);
+        if (!dealtDamage) {
+            if (!collisions.isEmpty()) {
+                if (entity instanceof LivingEntity livingEntity) {
+                    livingEntity.damage(10);
+                }
+            }
+
+            dealtDamage = true;
+        }
+
+        return collisions;
     }
 }

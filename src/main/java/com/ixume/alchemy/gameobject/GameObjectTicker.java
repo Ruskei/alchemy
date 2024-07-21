@@ -50,7 +50,7 @@ public class GameObjectTicker {
             if (object instanceof Hitbox hitbox) {
                 for (Entity entity : world.getEntities()) {
                     if (entity.getType().equals(EntityType.BLOCK_DISPLAY)) continue;
-                    intersections.addAll(hitbox.collide(entity.getBoundingBox()).stream().map(v -> new Location(world, v.x, v.y, v.z)).toList());
+                    intersections.addAll(hitbox.collide(entity).stream().map(v -> new Location(world, v.x, v.y, v.z)).toList());
                 }
 
                 for (GameObject object2 : objects) {

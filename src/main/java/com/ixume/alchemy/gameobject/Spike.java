@@ -62,7 +62,7 @@ public class Spike implements GameObject, Hitbox {
 
         defaultTransformationMatrix = transformation.getMatrix();
 
-        Matrix4f hitboxMatrix = new Matrix4f(this.defaultTransformationMatrix).scale(1, LENGTH, 1).translateLocal(0, -GROUND_PADDING, 0);
+        Matrix4f hitboxMatrix = new Matrix4f(this.defaultTransformationMatrix).scale(1, 1, 1).translateLocal(0, -GROUND_PADDING, 0);
         hitbox = new DisplayHitbox(origin, hitboxMatrix);
     }
 
@@ -87,7 +87,11 @@ public class Spike implements GameObject, Hitbox {
     @Override
     public void tick() {
         if (progress < LENGTH + 1) {
-            if (progress < LENGTH) spawnBlock();
+            if (progress < LENGTH) {
+                spawnBlock();
+                hitbox.setOrigin(new Vector3d(origin).add(new Vector3d(dir).mul(progress)));
+            }
+
             if (progress > 0) updateBlocks();
         }
 
@@ -108,13 +112,15 @@ public class Spike implements GameObject, Hitbox {
     public List<Vector3d> collide(Entity entity) {
         final List<Vector3d> collisions = this.hitbox.collide(entity);
         if (!dealtDamage) {
+            System.out.println("haven't dealt dmg");
             if (!collisions.isEmpty()) {
+                System.out.println("found collisions");
                 if (entity instanceof LivingEntity livingEntity) {
-                    livingEntity.damage(10);
+                    System.out.println("dealt 10 dmg");
+                    livingEntity.damage(20);
+                    dealtDamage = true;
                 }
             }
-
-            dealtDamage = true;
         }
 
         return collisions;

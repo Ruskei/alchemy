@@ -7,9 +7,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockType;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -18,19 +15,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlotGroup;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.BlockIterator;
 import org.bukkit.util.RayTraceResult;
-import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
-import org.joml.Vector3d;
 import org.joml.Vector3f;
 
-import java.util.Collection;
 import java.util.List;
 
 public class PlayerInteractListener implements Listener {
-    private final Alchemy plugin;
 
     private static PlayerInteractListener INSTANCE;
     public static void init(Alchemy plugin) {
@@ -39,7 +30,6 @@ public class PlayerInteractListener implements Listener {
 
     private PlayerInteractListener(Alchemy plugin) {
        Bukkit.getPluginManager().registerEvents(this, plugin);
-       this.plugin = plugin;
     }
 
     @EventHandler
@@ -53,7 +43,7 @@ public class PlayerInteractListener implements Listener {
             RayTraceResult rayTraceResult = w.rayTraceBlocks(origin, dir, 20);
             if (rayTraceResult != null) {
                 Location raycastLocation = rayTraceResult.getHitPosition().toLocation(w);
-                List<Entity> nearbyEntities = w.getNearbyEntities(raycastLocation, 14, 14, 14).stream().filter(k -> !(k.getType().equals(EntityType.BLOCK_DISPLAY))).toList();
+                List<Entity> nearbyEntities = w.getNearbyEntities(raycastLocation, 14, 14, 14).stream().filter(k -> !(k.getType().equals(EntityType.BLOCK_DISPLAY)) && !(k.isDead())).toList();
                 if (!nearbyEntities.isEmpty()) {
                     Entity closest = null;
                     double d = Double.MAX_VALUE;
@@ -68,7 +58,7 @@ public class PlayerInteractListener implements Listener {
                     System.out.println(rayTraceResult.getHitBlock().getType() + " " + nearbyEntities.getFirst().getType());
                     Vector3f target = closest.getLocation().toVector().toVector3f().add(0, 1, 0);
                     Vector3f spikeOrigin = rayTraceResult.getHitPosition().toVector3f();
-                    GameObjectTicker.getInstance().addHitbox(new Spike(spikeOrigin, target, rayTraceResult.getHitBlock().getBlockData(), event.getPlayer()));
+                    GameObjectTicker.getInstance().addObject(new Spike(spikeOrigin, target, rayTraceResult.getHitBlock().getBlockData(), event.getPlayer()));
                 }
             }
         }

@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TriangleHitboxFragmentCommand implements CommandExecutor {
-    private List<Vector3d> vertices;
-    private Alchemy plugin;
+    private final List<Vector3d> vertices;
+    private final Alchemy plugin;
 
     private static TriangleHitboxFragmentCommand INSTANCE;
     private TriangleHitboxFragmentCommand(Alchemy plugin) {
@@ -36,7 +36,7 @@ public class TriangleHitboxFragmentCommand implements CommandExecutor {
         vertices.add(player.getLocation().toVector().toVector3d());
         if (vertices.size() == 3) {
             System.out.println("reached 4 vertices");
-            GameObjectTicker.getInstance().addHitbox(new TriangleTestGameObject(new TriangleHitboxFragment(vertices.toArray(new Vector3d[0]), plugin)));
+            GameObjectTicker.getInstance().addObject(new TriangleTestGameObject(new TriangleHitboxFragment(vertices.toArray(new Vector3d[0]), plugin)));
             vertices.clear();
         }
 

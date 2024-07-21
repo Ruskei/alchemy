@@ -1,7 +1,6 @@
 package com.ixume.alchemy.hitbox;
 
 import com.ixume.alchemy.Alchemy;
-import org.bukkit.*;
 import org.bukkit.util.BoundingBox;
 import org.joml.Vector3d;
 
@@ -57,9 +56,6 @@ public class TriangleHitboxFragment implements HitboxFragmentImpl {
         Vector3d v = c.cross(a);
         Vector3d w = a.cross(b);
 
-        if (v.dot(u) < 0.001f) return false;
-        if (w.dot(u) < 0.001f) return false;
-
-        return true;
+        return (!(v.dot(u) < 0.001f || w.dot(u) < 0.001f));
     }
 }

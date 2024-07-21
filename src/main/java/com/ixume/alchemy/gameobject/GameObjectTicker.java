@@ -7,17 +7,13 @@ import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GameObjectTicker {
-    private Alchemy plugin;
     private volatile List<GameObject> objects;
-    private volatile List<Location> intersections;
-
-    private final Particle.DustOptions intersectionDust = new Particle.DustOptions(Color.fromRGB(0, 255, 0), 0.5F);;
+    private volatile List<GameObject> objectsToAdd;
+    private volatile List<GameObject> objectsToRemove;
 
     private static GameObjectTicker INSTANCE;
     public static void init(Alchemy plugin) {
@@ -29,43 +25,44 @@ public class GameObjectTicker {
     public static GameObjectTicker getInstance() {return INSTANCE;}
 
     private GameObjectTicker(Alchemy plugin) {
-        objects = new CopyOnWriteArrayList<>();
-        intersections = new CopyOnWriteArrayList<>();
+        objects = new ArrayList<>();
+        objectsToAdd = new ArrayList<>();
+        objectsToRemove = new ArrayList<>();
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             GameObjectTicker.INSTANCE.objects.stream().filter(o -> o instanceof Hitbox).map(o -> ((Hitbox) o)).forEach(o -> o.getFragments().forEach(HitboxFragmentImpl::render));
-            World world = Bukkit.getWorld("world");
-            intersections = findIntersections().stream().toList();
-
-            for (Location intersection : GameObjectTicker.INSTANCE.intersections) {
-                world.spawnParticle(Particle.DUST, intersection, 5, intersectionDust);
-            }
+            tick();
         }, 10, 1);
     }
 
-    private Set<Location> findIntersections() {
+    private void tick() {
         World world = Bukkit.getWorld("world");
-        Set<Location> intersections = new HashSet<>();
         for (GameObject object : objects) {
             object.tick();
             if (object instanceof Hitbox hitbox) {
                 for (Entity entity : world.getEntities()) {
                     if (entity.getType().equals(EntityType.BLOCK_DISPLAY)) continue;
-                    intersections.addAll(hitbox.collide(entity).stream().map(v -> new Location(world, v.x, v.y, v.z)).toList());
+                    hitbox.collide(entity);
                 }
 
                 for (GameObject object2 : objects) {
                     if (object == object2) continue;
                     if (object2 instanceof Hitbox hitbox2) {
-                        intersections.addAll(hitbox.collide(hitbox2).stream().map(v -> new Location(world, v.x, v.y, v.z)).toList());
+                        hitbox.collide(hitbox2);
                     }
                 }
             }
         }
 
-        return intersections;
+        GameObjectTicker.getInstance().objects.removeAll(GameObjectTicker.getInstance().objectsToRemove);
+        GameObjectTicker.getInstance().objectsToRemove.clear();
+        GameObjectTicker.getInstance().objects.addAll(GameObjectTicker.getInstance().objectsToAdd);
+        GameObjectTicker.getInstance().objectsToAdd.clear();
     }
 
-    public void addHitbox(GameObject gameObject) {
-        objects.add(gameObject);
+    public void addObject(GameObject gameObject) {
+        objectsToAdd.add(gameObject);
+    }
+    public void removeObject(GameObject gameObject) {
+        objectsToRemove.add(gameObject);
     }
 }

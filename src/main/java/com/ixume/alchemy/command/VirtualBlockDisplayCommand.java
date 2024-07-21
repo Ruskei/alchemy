@@ -12,14 +12,12 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class VirtualBlockDisplayCommand implements CommandExecutor {
-    private final Alchemy plugin;
     private static VirtualBlockDisplayCommand INSTANCE;
     public static void init(Alchemy plugin) {
         if (INSTANCE == null) INSTANCE = new VirtualBlockDisplayCommand(plugin);
     }
 
     private VirtualBlockDisplayCommand(Alchemy plugin) {
-        this.plugin = plugin;
         plugin.getCommand("virtualtest").setExecutor(this);
     }
 
@@ -40,7 +38,7 @@ public class VirtualBlockDisplayCommand implements CommandExecutor {
             }
 
             if (c != null) {
-                GameObjectTicker.getInstance().addHitbox(new DisplayHitbox(c.getLocation().toVector().toVector3d(), c.getTransformation()));
+                GameObjectTicker.getInstance().addObject(new DisplayHitbox(c.getLocation().toVector().toVector3d(), c.getTransformation()));
             }
         }
 

@@ -4,7 +4,6 @@ import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import com.ixume.alchemy.hitbox.TriangleHitboxFragment;
 import org.bukkit.entity.Entity;
-import org.bukkit.util.BoundingBox;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
@@ -43,6 +42,11 @@ public class TriangleTestGameObject implements GameObject, Hitbox {
 
     @Override
     public void tick() {
+
+    }
+
+    @Override
+    public void kill() {
 
     }
 }

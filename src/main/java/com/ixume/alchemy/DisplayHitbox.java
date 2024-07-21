@@ -4,14 +4,10 @@ import com.ixume.alchemy.gameobject.GameObject;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import com.ixume.alchemy.hitbox.ParallelogramHitboxFragment;
-import com.ixume.alchemy.hitbox.TriangleHitboxFragment;
-import org.bukkit.*;
 import org.bukkit.entity.Entity;
-import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Transformation;
 import org.joml.*;
 
-import java.lang.Math;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,33 +74,6 @@ public class DisplayHitbox implements GameObject, Hitbox {
         origin = newOrigin;
     }
 
-    private void render() {
-//        connect(vertices.get(0), vertices.get(1));
-//        connect(vertices.get(1), vertices.get(2));
-//        connect(vertices.get(2), vertices.get(3));
-//        connect(vertices.get(3), vertices.get(0));
-//
-//        connect(vertices.get(0), vertices.get(4));
-//        connect(vertices.get(1), vertices.get(5));
-//        connect(vertices.get(2), vertices.get(6));
-//        connect(vertices.get(3), vertices.get(7));
-//
-//        connect(vertices.get(4), vertices.get(5));
-//        connect(vertices.get(5), vertices.get(6));
-//        connect(vertices.get(6), vertices.get(7));
-//        connect(vertices.get(7), vertices.get(4));
-    }
-
-//    private void connect(Vector3d a, Vector3d b) {
-//        World world = Bukkit.getServer().getWorld("world");
-//        Vector3d diff = new Vector3d(b).sub(a);
-//        for (double d = 0; d < 1d; d += 0.1) {
-//            Vector3d n = new Vector3d(a).add(new Vector3d(diff).mul(d));
-//            Location particleLocation = new Location(world, n.x, n.y, n.z);
-//            world.spawnParticle(Particle.DUST, particleLocation, 1, edgeDust);
-//        }
-//    }
-
     @Override
     public List<Vector3d> collide(Hitbox hitbox) {
         List<Vector3d> intersections = new ArrayList<>();
@@ -131,6 +100,11 @@ public class DisplayHitbox implements GameObject, Hitbox {
 
     @Override
     public void tick() {
+
+    }
+
+    @Override
+    public void kill() {
 
     }
 }

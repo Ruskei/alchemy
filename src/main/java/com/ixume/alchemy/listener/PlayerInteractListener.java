@@ -4,10 +4,13 @@ import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.Spike;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockType;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,9 +18,14 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.BlockIterator;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Transformation;
+import org.bukkit.util.Vector;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
+
+import java.util.Collection;
 
 public class PlayerInteractListener implements Listener {
     private final Alchemy plugin;
@@ -34,26 +42,22 @@ public class PlayerInteractListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && event.getHand().getGroup().equals(EquipmentSlotGroup.MAINHAND) && event.getItem().getType().equals(Material.ACACIA_BOAT)) {
-            System.out.println("LEFT_CLICK_BLOCK");
+        if (event.getAction().equals(Action.RIGHT_CLICK_AIR) && event.getHand().getGroup().equals(EquipmentSlotGroup.MAINHAND) && event.getItem().getType().equals(Material.ACACIA_BOAT)) {
             event.setCancelled(true);
-//            Player player = event.getPlayer();
-//            World world = player.getWorld();
-//            Block block = event.getClickedBlock();
-//            BlockDisplay blockDisplay = world.spawn(event.getInteractionPoint().add(0, 0.5, 0), BlockDisplay.class);
-//            blockDisplay.setBlock(block.getBlockData());
-//
-//            Transformation transformation = blockDisplay.getTransformation();
-//            transformation.getLeftRotation().identity();
-//            transformation.getLeftRotation().rotateY((float) (-player.getYaw() * Math.PI / 180f));
-//
-//            transformation.getLeftRotation();
-//            Vector3f v = new Vector3f(0.5f, 0.5f, 0.5f);
-//            v.rotate(transformation.getLeftRotation());
-//            v.mul(-1);
-//            transformation.getTranslation().set(v);
-//            blockDisplay.setTransformation(transformation);
-            GameObjectTicker.getInstance().addHitbox(new Spike(event.getInteractionPoint().toVector().toVector3d(), event.getClickedBlock().getBlockData(), event.getPlayer()));
+            Player p = event.getPlayer();
+            World w = p.getWorld();
+            Location origin = p.getEyeLocation();
+            Vector dir = p.getLocation().getDirection();
+            RayTraceResult rayTraceResult = w.rayTraceBlocks(origin, dir, 20);
+            if (rayTraceResult != null) {
+                Collection<Entity> nearbyEntities = w.getNearbyEntities(rayTraceResult.getHitPosition().toLocation(w), 10, 10, 10);
+                if (!nearbyEntities.isEmpty()) {
+                    System.out.println(rayTraceResult.getHitBlock().getType() + " " + nearbyEntities.stream().toList().getFirst().getType());
+                    Vector3f target = nearbyEntities.stream().toList().getFirst().getLocation().toVector().toVector3f().add(0, 1, 0);
+                    Vector3f spikeOrigin = rayTraceResult.getHitPosition().toVector3f();
+                    GameObjectTicker.getInstance().addHitbox(new Spike(spikeOrigin, target, rayTraceResult.getHitBlock().getBlockData(), event.getPlayer()));
+                }
+            }
         }
     }
 }

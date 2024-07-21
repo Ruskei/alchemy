@@ -52,10 +52,21 @@ public class PlayerInteractListener implements Listener {
             Vector dir = p.getLocation().getDirection();
             RayTraceResult rayTraceResult = w.rayTraceBlocks(origin, dir, 20);
             if (rayTraceResult != null) {
-                List<Entity> nearbyEntities = w.getNearbyEntities(rayTraceResult.getHitPosition().toLocation(w), 10, 10, 10).stream().filter(k -> !(k.getType().equals(EntityType.BLOCK_DISPLAY))).toList();
+                Location raycastLocation = rayTraceResult.getHitPosition().toLocation(w);
+                List<Entity> nearbyEntities = w.getNearbyEntities(raycastLocation, 14, 14, 14).stream().filter(k -> !(k.getType().equals(EntityType.BLOCK_DISPLAY))).toList();
                 if (!nearbyEntities.isEmpty()) {
+                    Entity closest = null;
+                    double d = Double.MAX_VALUE;
+                    for (Entity e : nearbyEntities) {
+                        double d1 = e.getLocation().distanceSquared(raycastLocation);
+                        if (d1 < d) {
+                            d = d1;
+                            closest = e;
+                        }
+                    }
+
                     System.out.println(rayTraceResult.getHitBlock().getType() + " " + nearbyEntities.getFirst().getType());
-                    Vector3f target = nearbyEntities.stream().toList().getFirst().getLocation().toVector().toVector3f().add(0, 1, 0);
+                    Vector3f target = closest.getLocation().toVector().toVector3f().add(0, 1, 0);
                     Vector3f spikeOrigin = rayTraceResult.getHitPosition().toVector3f();
                     GameObjectTicker.getInstance().addHitbox(new Spike(spikeOrigin, target, rayTraceResult.getHitBlock().getBlockData(), event.getPlayer()));
                 }

@@ -18,7 +18,9 @@ import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Spike implements GameObject, Hitbox {
     private static final int LENGTH = 8;
@@ -34,10 +36,10 @@ public class Spike implements GameObject, Hitbox {
     private final Matrix4f defaultTransformationMatrix;
 
     private final DisplayHitbox hitbox;
-    private boolean dealtDamage;
+    private final Set<Integer> hitEntities;
 
     public Spike(Vector3f spikeOrigin, Vector3f target, BlockData blockData, Player player) {
-        dealtDamage = false;
+        hitEntities = new HashSet<>();
         displays = new ArrayList<>();
         progress = 0;
         world = player.getWorld();
@@ -111,14 +113,11 @@ public class Spike implements GameObject, Hitbox {
     @Override
     public List<Vector3d> collide(Entity entity) {
         final List<Vector3d> collisions = this.hitbox.collide(entity);
-        if (!dealtDamage) {
-            System.out.println("haven't dealt dmg");
+        if (!hitEntities.contains(entity.getEntityId()) && progress < LENGTH + 1) {
             if (!collisions.isEmpty()) {
-                System.out.println("found collisions");
                 if (entity instanceof LivingEntity livingEntity) {
-                    System.out.println("dealt 10 dmg");
-                    livingEntity.damage(20);
-                    dealtDamage = true;
+                    livingEntity.damage(12);
+                    hitEntities.add(entity.getEntityId());
                 }
             }
         }

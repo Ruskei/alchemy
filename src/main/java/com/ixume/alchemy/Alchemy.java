@@ -1,6 +1,6 @@
 package com.ixume.alchemy;
 
-import com.ixume.alchemy.command.TriangleHitboxFragmentCommand;
+import com.ixume.alchemy.command.VirtualObjectTestCommand;
 import com.ixume.alchemy.command.VirtualBlockDisplayCommand;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.listener.PlayerInteractListener;
@@ -11,7 +11,7 @@ public final class Alchemy extends JavaPlugin {
     public void onEnable() {
         PlayerInteractListener.init(this);
 
-        TriangleHitboxFragmentCommand.init(this);
+        VirtualObjectTestCommand.init(this);
         VirtualBlockDisplayCommand.init(this);
 
         GameObjectTicker.init(this);

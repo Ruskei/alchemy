@@ -55,7 +55,6 @@ public class PlayerInteractListener implements Listener {
                         }
                     }
 
-                    System.out.println(rayTraceResult.getHitBlock().getType() + " " + nearbyEntities.getFirst().getType());
                     Vector3f target = closest.getLocation().toVector().toVector3f().add(0, 1, 0);
                     Vector3f spikeOrigin = rayTraceResult.getHitPosition().toVector3f();
                     GameObjectTicker.getInstance().addObject(new Spike(spikeOrigin, target, rayTraceResult.getHitBlock().getBlockData(), event.getPlayer()));

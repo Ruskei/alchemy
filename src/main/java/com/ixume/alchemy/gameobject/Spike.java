@@ -24,8 +24,8 @@ public class Spike implements GameObject, Hitbox {
     private static final int LINGER = 5;
 //    private static final int LENGTH = 8;
     private static final int SPEED = 2;
-    private static final int LIFE = 4;
-    private static final int SMOOTH_OFFSET = 2;
+    private static final int LIFE = 5;
+    private static final int SMOOTH_OFFSET = 1;
     private static final int GROUND_PADDING = 5;
 
     private final List<BlockDisplay> displays;
@@ -61,7 +61,7 @@ public class Spike implements GameObject, Hitbox {
         dir.rotate(transformation.rightRotation).rotate(transformation.leftRotation);
         dir.mul(-1);
 
-        this.origin = new Vector3d(spikeOrigin.x - dir.x * SMOOTH_OFFSET, spikeOrigin.y - dir.y * SMOOTH_OFFSET + GROUND_PADDING, spikeOrigin.z - dir.z * SMOOTH_OFFSET);
+        this.origin = new Vector3d(spikeOrigin.x - dir.x * (SMOOTH_OFFSET + SPEED), spikeOrigin.y - dir.y * (SMOOTH_OFFSET + SPEED) + GROUND_PADDING, spikeOrigin.z - dir.z * (SMOOTH_OFFSET + SPEED));
 
         defaultTransformationMatrix = transformation.getMatrix();
 
@@ -96,7 +96,6 @@ public class Spike implements GameObject, Hitbox {
     @Override
     public void tick() {
         if (progress < LIFE + 1) {
-            System.out.println("progress: " + progress + " max: " + (LIFE + 1));
             if (progress < LIFE) {
                 spawn();
                 hitbox.setOrigin(new Vector3d(origin).add(new Vector3d(dir).mul(progress * SPEED)));

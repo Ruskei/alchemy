@@ -13,8 +13,12 @@ import org.joml.Vector3d;
 public class VirtualCuboid implements GameObject {
     private final VirtualPlane[] planes;
     private final Player p;
+
     private ArmorStand shulkerStandN;
     private Shulker shulkerN;
+
+    private ArmorStand shulkerStandS;
+    private Shulker shulkerS;
 
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(0, 255, 0), 1.0F);
 
@@ -45,6 +49,24 @@ public class VirtualCuboid implements GameObject {
             shulkerStandN.removePassenger(shulkerN);
             shulkerStandN.teleport(new Location(p.getWorld(), pos.x, pos.y - 1.475 - 1, pos.z));
             shulkerStandN.addPassenger(shulkerN);
+        }
+    }
+
+    private void setSouth(Vector3d pos) {
+        if (shulkerStandS == null) {
+            shulkerStandS = p.getWorld().spawn(new Location(p.getWorld(), pos.x, pos.y - 1.475 - 1, pos.z), ArmorStand.class);
+            shulkerStandS.setInvulnerable(true);
+            shulkerStandS.setGravity(false);
+            shulkerStandS.setInvisible(true);
+            shulkerS = p.getWorld().spawn(new Location(p.getWorld(), pos.x, pos.y, pos.z), Shulker.class);
+            shulkerS.setColor(DyeColor.RED);
+            shulkerS.setAI(false);
+            shulkerS.setInvulnerable(true);
+            shulkerStandS.addPassenger(shulkerS);
+        } else {
+            shulkerStandS.removePassenger(shulkerS);
+            shulkerStandS.teleport(new Location(p.getWorld(), pos.x, pos.y - 1.475 - 1, pos.z));
+            shulkerStandS.addPassenger(shulkerS);
         }
     }
 
@@ -80,7 +102,15 @@ public class VirtualCuboid implements GameObject {
         }
 
         if (intersectionS.z != Double.POSITIVE_INFINITY) {
+            setSouth(intersectionS);
             world.spawnParticle(Particle.DUST, new Location(world, intersectionS.x, intersectionS.y, intersectionS.z), 1, edgeDust);
+        } else {
+            if (shulkerStandS != null) {
+                shulkerS.remove();
+                shulkerS = null;
+                shulkerStandS.remove();
+                shulkerStandS = null;
+            }
         }
     }
 

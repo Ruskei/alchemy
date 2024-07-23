@@ -145,20 +145,23 @@ public class VirtualPlane {
 
         double northDistance = Double.NEGATIVE_INFINITY;
         Vector3d northIntersection = null;
-        for (Vector3d intersection : northIntersections) {
-            if (intersection.z > northDistance) {
-                northDistance = intersection.z;
-                northIntersection = intersection;
+        if (new Vector3d(NORTH_SOUTH_VECTOR).dot(normal) < 0) {
+            for (Vector3d intersection : northIntersections) {
+                if (intersection.z > northDistance) {
+                    northDistance = intersection.z;
+                    northIntersection = intersection;
+                }
             }
         }
 
         double southDistance = Double.POSITIVE_INFINITY;
         Vector3d southIntersection = null;
-
-        for (Vector3d intersection : southIntersections) {
-            if (intersection.z < southDistance) {
-                southDistance = intersection.z;
-                southIntersection = intersection;
+        if (new Vector3d(NORTH_SOUTH_VECTOR).dot(normal) > 0) {
+            for (Vector3d intersection : southIntersections) {
+                if (intersection.z < southDistance) {
+                    southDistance = intersection.z;
+                    southIntersection = intersection;
+                }
             }
         }
 

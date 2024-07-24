@@ -3,6 +3,7 @@ package com.ixume.alchemy.command;
 import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
+import com.ixume.alchemy.gameobject.virtualobjects.VirtualParallelepiped;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -38,7 +39,7 @@ public class VirtualBlockDisplayCommand implements CommandExecutor {
             }
 
             if (c != null) {
-                GameObjectTicker.getInstance().addObject(new DisplayHitbox(c.getLocation().toVector().toVector3d(), c.getTransformation()));
+                GameObjectTicker.getInstance().addObject(new VirtualParallelepiped(world, c.getLocation().toVector().toVector3d(), c.getTransformation()));
             }
         }
 

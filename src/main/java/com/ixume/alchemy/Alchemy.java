@@ -7,8 +7,11 @@ import com.ixume.alchemy.listener.PlayerInteractListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Alchemy extends JavaPlugin {
+    private static Alchemy INSTANCE;
+    public static Alchemy getInstance() {return INSTANCE;}
     @Override
     public void onEnable() {
+        INSTANCE = this;
         PlayerInteractListener.init(this);
 
         VirtualObjectTestCommand.init(this);

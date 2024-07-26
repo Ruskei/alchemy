@@ -28,7 +28,7 @@ public class VirtualParallelepiped implements GameObject {
         cubify();
     }
 
-    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
+    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.2F);
 
     @Override
     public void tick() {
@@ -41,9 +41,9 @@ public class VirtualParallelepiped implements GameObject {
 //            int width = (int) ((max.x - min.x) / RESOLUTION);
 //            int length = (int) ((max.z - min.z) / RESOLUTION);
 //            int height = (int) ((max.y - min.y) / RESOLUTION);
-//            for (int x = 0; x < width; x++) {
-//                for (int y = 0; y < height; y++) {
-//                    for (int z = 0; z < length; z++) {
+//            for (int y = 0; y < height; y++) {
+//                for (int z = 0; z < length; z++) {
+//                    for (int x = 0; x < width; x++) {
 //                        if (positions[x + (z * width) + (y * width * length)]) {
 //                            world.spawnParticle(Particle.DUST, new Location(world, min.x + x * RESOLUTION, min.y + y * RESOLUTION, min.z + z * RESOLUTION), 1, edgeDust);
 //                        }
@@ -69,12 +69,30 @@ public class VirtualParallelepiped implements GameObject {
         int height = (int) ((max.y - min.y) / RESOLUTION);
 //        create 3d
         positions = new boolean[width * height * length];
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                for (int z = 0; z < length; z++) {
+        for (int y = 0; y < height; y++) {
+            for (int z = 0; z < length; z++) {
+                for (int x = 0; x < width; x++) {
                     positions[x + (z * width) + (y * width * length)] = hitbox.isInside(new Vector3d(min.x + x * RESOLUTION, min.y + y * RESOLUTION, min.z + z * RESOLUTION));
                 }
             }
+        }
+
+        List<Integer> occluded = new ArrayList<>();
+        for (int y = 2; y < height - 2; y++) {
+            for (int z = 2; z < length - 2; z++) {
+                for (int x = 2; x < width - 2; x++) {
+                    int i = x + (z * width) + (y * width * length);
+                    if (positions[i]) {
+                        if (convolute(x, y, z, width, length, positions)) {
+                            occluded.add(i);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (Integer i : occluded) {
+            positions[i] = false;
         }
 
         System.out.println("write positions: " + (System.currentTimeMillis() - start));
@@ -134,40 +152,27 @@ public class VirtualParallelepiped implements GameObject {
         }
 
         System.out.println("finish: " + (System.currentTimeMillis() - start));
+    }
 
-//        for (double x = min.x; x <= max.x; x += RESOLUTION) {
-//            for (double y = min.y; y <= max.y; y += RESOLUTION) {
-//                for (double z = min.z; z <= max.z; z += RESOLUTION) {
-//                    double s = 0;
-//                    outer:
-//                    while (true) {
-//                        VirtualShulker shulker = new VirtualShulker(new Vector3d(x, y, z), new Vector3d(x + s + RESOLUTION, y + s + RESOLUTION, z + s + RESOLUTION));
-//                        if (shulker.isInside(hitbox, RESOLUTION)) {
-//                            //probably valid size
-//
-//                            for (VirtualShulker cube : cubes) {
-//                                if (cube.isInside(shulker)) {
-//                                    //invalid size
-//                                    break outer;
-//                                }
-//                            }
-//
-//                        } else {
-//                            break;
-//                        }
-//
-//                        s += RESOLUTION;
-//                    }
-//
-//                    if (s > 0) {
-//                        cubes.add(new VirtualShulker(new Vector3d(x, y, z), new Vector3d(x + s, y + s, z + s)));
-//                        spawnShulker(new Vector3d(x + s / 2d, y, z + s / 2d), s);
-//                    }
-//                }
-//            }
-//        }
-//
-//        System.out.println("finish: " + (System.currentTimeMillis() - start));
+    private boolean convolute(int x, int y, int z, int width, int length, boolean[] positions) {
+        for (int y1 = y - 2; y1 <= y + 2; y1++) {
+            for (int z1 = z - 2; z1 <= z + 2; z1++) {
+                for (int x1 = x - 2; x1 <= x + 2; x1++) {
+                    if ((x1 == x - 2 && y1 == y - 2 && z1 == z - 2)
+                    || (x1 == x + 2 && y1 == y - 2 && z1 == z - 2)
+                    || (x1 == x + 2 && y1 == y + 2 && z1 == z - 2)
+                    || (x1 == x + 2 && y1 == y + 2 && z1 == z + 2)
+                    || (x1 == x + 2 && y1 == y - 2 && z1 == z + 2)
+                    || (x1 == x - 2 && y1 == y + 2 && z1 == z + 2)
+                    || (x1 == x - 2 && y1 == y - 2 && z1 == z + 2)
+                    || (x1 == x - 2 && y1 == y + 2 && z1 == z - 2)) continue;
+
+                    if (!positions[x1 + (z1 * width) + (y1 * width * length)]) return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private ArmorStand spawnShulker(Vector3d pos, double scale) {
@@ -179,7 +184,7 @@ public class VirtualParallelepiped implements GameObject {
         shulker.setAI(false);
         shulker.setGravity(false);
         shulker.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(scale);
-        shulker.setInvisible(true);
+//        shulker.setInvisible(true);
         shulkerStand.addPassenger(shulker);
         return shulkerStand;
     }

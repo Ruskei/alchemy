@@ -1,31 +1,44 @@
 package com.ixume.alchemy.gameobject.virtualobjects;
 
+import com.google.common.collect.ImmutableList;
+import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.gameobject.GameObject;
 import it.unimi.dsi.fastutil.Pair;
+import net.minecraft.core.Holder;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.Level;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Shulker;
 import org.bukkit.util.Transformation;
 import org.joml.Vector3d;
+import org.joml.Vector4d;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class VirtualParallelepiped implements GameObject {
     private static final double RESOLUTION = 0.5;
     private final World world;
     private final DisplayHitbox hitbox;
-    private List<VirtualShulker> cubes;
     private boolean[] positions;
 
     public VirtualParallelepiped(World w, Vector3d origin, Transformation transformation) {
         this.world = w;
         hitbox = new DisplayHitbox(origin, transformation);
-        cubes = new ArrayList<>();
 
-        cubify();
+        Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), this::cubify);
     }
 
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.2F);
@@ -98,6 +111,8 @@ public class VirtualParallelepiped implements GameObject {
         System.out.println("write positions: " + (System.currentTimeMillis() - start));
         start = System.currentTimeMillis();
 
+        List<Vector4d> shulkers = new ArrayList<>();
+
         for (int y = 0; y < height; y++) {
             for (int z = 0; z < length; z++) {
                 for (int x = 0; x < width; x++) {
@@ -145,9 +160,31 @@ public class VirtualParallelepiped implements GameObject {
                             }
                         }
 
-                        spawnShulker(new Vector3d(min.x + x * RESOLUTION + size * RESOLUTION / 2d, min.y + y * RESOLUTION, min.z + z * RESOLUTION + size * RESOLUTION / 2d), size * RESOLUTION);
+                        shulkers.add(new Vector4d(min.x + x * RESOLUTION + size * RESOLUTION / 2d, min.y + y * RESOLUTION, min.z + z * RESOLUTION + size * RESOLUTION / 2d, size * RESOLUTION));
                     }
                 }
+            }
+        }
+
+        for (Player p : world.getPlayers()) {
+            ServerPlayer serverPlayer = ((CraftPlayer) p).getHandle();
+            Level level = serverPlayer.level();
+            ServerGamePacketListenerImpl connection = serverPlayer.connection;
+            for (Vector4d v : shulkers) {
+                net.minecraft.world.entity.decoration.ArmorStand stand = new net.minecraft.world.entity.decoration.ArmorStand(level, v.x, v.y - 1.975, v.z);
+                stand.setInvisible(true);
+                net.minecraft.world.entity.monster.Shulker shulker = new net.minecraft.world.entity.monster.Shulker(EntityType.SHULKER, level);
+                Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
+                shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
+                shulker.getAttribute(Attributes.SCALE).setBaseValue(v.w);
+                stand.passengers = ImmutableList.of(shulker);
+                packets.add(stand.getAddEntityPacket());
+                packets.add(shulker.getAddEntityPacket());
+                packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
+                packets.add(new ClientboundSetPassengersPacket(stand));
+                packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
+                packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
+                connection.send(new ClientboundBundlePacket(packets));
             }
         }
 

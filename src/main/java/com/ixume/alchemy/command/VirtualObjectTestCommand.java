@@ -2,9 +2,6 @@ package com.ixume.alchemy.command;
 
 import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
-import com.ixume.alchemy.gameobject.TriangleTestGameObject;
-import com.ixume.alchemy.gameobject.virtualobjects.VirtualCuboid;
-import com.ixume.alchemy.hitbox.TriangleHitboxFragment;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -37,7 +34,7 @@ public class VirtualObjectTestCommand implements CommandExecutor {
         vertices.add(player.getLocation().toVector().toVector3d());
         if (vertices.size() == 2) {
             System.out.println("reached 2 vertices");
-            GameObjectTicker.getInstance().addObject(new VirtualCuboid(vertices.get(0), vertices.get(1), player));
+//            GameObjectTicker.getInstance().addObject(new VirtualCuboid(vertices.get(0), vertices.get(1), player));
             vertices.clear();
         }
 

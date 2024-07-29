@@ -4,8 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.gameobject.GameObject;
+import com.ixume.alchemy.gameobject.GameObjectTicker;
+import com.ixume.alchemy.gameobject.physical.Physical;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.core.Holder;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,7 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class VirtualParallelepiped implements GameObject {
+public class VirtualParallelepiped implements GameObject, Physical {
     private static final double RESOLUTION = 0.5;
     private final World world;
     private final DisplayHitbox hitbox;
@@ -38,7 +39,9 @@ public class VirtualParallelepiped implements GameObject {
         this.world = w;
         hitbox = new DisplayHitbox(origin, transformation);
 
-        Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), this::cubify);
+        Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), () -> {
+            GameObjectTicker.getInstance().getProximityList().addAll(cubify());
+        });
     }
 
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.2F);
@@ -72,7 +75,7 @@ public class VirtualParallelepiped implements GameObject {
 
     }
 
-    private void cubify() {
+    private List<Vector4d> cubify() {
         long start = System.currentTimeMillis();
         Pair<Vector3d, Vector3d> boundingBox = hitbox.getBoundingBox();
         Vector3d min = boundingBox.left();
@@ -166,29 +169,31 @@ public class VirtualParallelepiped implements GameObject {
             }
         }
 
-        for (Player p : world.getPlayers()) {
-            ServerPlayer serverPlayer = ((CraftPlayer) p).getHandle();
-            Level level = serverPlayer.level();
-            ServerGamePacketListenerImpl connection = serverPlayer.connection;
-            for (Vector4d v : shulkers) {
-                net.minecraft.world.entity.decoration.ArmorStand stand = new net.minecraft.world.entity.decoration.ArmorStand(level, v.x, v.y - 1.975, v.z);
-                stand.setInvisible(true);
-                net.minecraft.world.entity.monster.Shulker shulker = new net.minecraft.world.entity.monster.Shulker(EntityType.SHULKER, level);
-                Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
-                shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
-                shulker.getAttribute(Attributes.SCALE).setBaseValue(v.w);
-                stand.passengers = ImmutableList.of(shulker);
-                packets.add(stand.getAddEntityPacket());
-                packets.add(shulker.getAddEntityPacket());
-                packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
-                packets.add(new ClientboundSetPassengersPacket(stand));
-                packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
-                packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
-                connection.send(new ClientboundBundlePacket(packets));
-            }
-        }
+        return shulkers;
 
-        System.out.println("finish: " + (System.currentTimeMillis() - start));
+//        for (Player p : world.getPlayers()) {
+//            ServerPlayer serverPlayer = ((CraftPlayer) p).getHandle();
+//            Level level = serverPlayer.level();
+//            ServerGamePacketListenerImpl connection = serverPlayer.connection;
+//            for (Vector4d v : shulkers) {
+//                net.minecraft.world.entity.decoration.ArmorStand stand = new net.minecraft.world.entity.decoration.ArmorStand(level, v.x, v.y - 1.975, v.z);
+//                stand.setInvisible(true);
+//                net.minecraft.world.entity.monster.Shulker shulker = new net.minecraft.world.entity.monster.Shulker(EntityType.SHULKER, level);
+//                Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
+//                shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
+//                shulker.getAttribute(Attributes.SCALE).setBaseValue(v.w);
+//                stand.passengers = ImmutableList.of(shulker);
+//                packets.add(stand.getAddEntityPacket());
+//                packets.add(shulker.getAddEntityPacket());
+//                packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
+//                packets.add(new ClientboundSetPassengersPacket(stand));
+//                packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
+//                packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
+//                connection.send(new ClientboundBundlePacket(packets));
+//            }
+//        }
+//
+//        System.out.println("finish: " + (System.currentTimeMillis() - start));
     }
 
     private boolean convolute(int x, int y, int z, int width, int length, boolean[] positions) {
@@ -224,5 +229,10 @@ public class VirtualParallelepiped implements GameObject {
 //        shulker.setInvisible(true);
         shulkerStand.addPassenger(shulker);
         return shulkerStand;
+    }
+
+    @Override
+    public List<Vector4d> getColliders() {
+        return null;
     }
 }

@@ -4,13 +4,11 @@ import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.gameobject.Chunk;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-
-import java.util.ArrayList;
+import org.joml.Vector3d;
 
 public class PlayerJoinListener implements Listener {
     private static PlayerJoinListener INSTANCE;
@@ -25,8 +23,9 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent joinEvent) {
         Player player = joinEvent.getPlayer();
-//        Chunk playerChunk = GameObjectTicker.getInstance().proximityList.get(player.getLocation().toVector().toVector3d());
-//        if (playerChunk == null)
-        GameObjectTicker.getInstance().getProximityList().playerChunkMap.put(((CraftPlayer) joinEvent.getPlayer()).getHandle().getId(), GameObjectTicker.getInstance().proximityList.get(joinEvent.getPlayer().getLocation().toVector().toVector3d()));
+        Vector3d playerVector =  GameObjectTicker.getInstance().proximityList.getKeyFromRaw(player.getLocation().toVector().toVector3d());
+        if (GameObjectTicker.getInstance().proximityList.chunkMap.containsKey(playerVector)) {
+            GameObjectTicker.getInstance().getProximityList().playerChunkMap.put(player.getEntityId(), GameObjectTicker.getInstance().proximityList.chunkMap.get(playerVector));
+        }
     }
 }

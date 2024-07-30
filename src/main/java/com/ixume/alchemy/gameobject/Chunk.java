@@ -10,6 +10,7 @@ import net.minecraft.world.level.Level;
 import org.joml.Vector4d;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Chunk {
     private final Level level;
@@ -18,15 +19,15 @@ public class Chunk {
 
     public Chunk(Level level) {
         this.level = level;
-        colliders = new HashMap<>();
-        collidersToAdd = new HashMap<>();
+        colliders = new ConcurrentHashMap<>();
+        collidersToAdd = new ConcurrentHashMap<>();
     }
 
-    public Chunk (Level level, Vector4d... vectors) {
+    public Chunk (Level level, Vector4d v, int aID, int sID) {
         this.level = level;
         colliders = new HashMap<>();
         collidersToAdd = new HashMap<>();
-        Arrays.stream(vectors).forEach(v -> collidersToAdd.put(v, createStand(v)));
+        collidersToAdd.put(v, createStand(v, aID, sID));
     }
 
     public void update() {
@@ -34,25 +35,19 @@ public class Chunk {
         collidersToAdd.clear();
     }
 
-    public void put(Vector4d v) {
-        collidersToAdd.put(v, createStand(v));
+    public void put(Vector4d v, int aID, int sID) {
+        collidersToAdd.put(v, createStand(v, aID, sID));
     }
 
-    private Pair<ArmorStand, Shulker> createStand(Vector4d v) {
+    private Pair<ArmorStand, Shulker> createStand(Vector4d v, int aID, int sID) {
         net.minecraft.world.entity.decoration.ArmorStand stand = new net.minecraft.world.entity.decoration.ArmorStand(level, v.x, v.y - 1.975, v.z);
         stand.setInvisible(true);
+        stand.setId(aID);
         net.minecraft.world.entity.monster.Shulker shulker = new net.minecraft.world.entity.monster.Shulker(EntityType.SHULKER, level);
+        shulker.setId(sID);
         shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
         shulker.getAttribute(Attributes.SCALE).setBaseValue(v.w);
         stand.passengers = ImmutableList.of(shulker);
         return Pair.of(stand, shulker);
-//        Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
-//        packets.add(stand.getAddEntityPacket());
-//        packets.add(shulker.getAddEntityPacket());
-//        packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
-//        packets.add(new ClientboundSetPassengersPacket(stand));
-//        packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
-//        packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
-//        connection.send(new ClientboundBundlePacket(packets));
     }
 }

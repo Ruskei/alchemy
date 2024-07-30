@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Shulker;
 import org.bukkit.*;
@@ -14,12 +15,10 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.joml.Vector3d;
 import org.joml.Vector4d;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GameObjectTicker {
     private volatile int time;
@@ -76,62 +75,102 @@ public class GameObjectTicker {
         if (time % 2 == 0) {
             for (Player p : world.getPlayers()) {
                 ServerPlayer serverPlayer = ((CraftPlayer) p).getHandle();
-                Chunk playerChunk = proximityList.get(p.getLocation().toVector().toVector3d());
-                if (playerChunk != null) {
-                    if (playerChunk.equals(proximityList.playerChunkMap.get(p.getEntityId()))) {
-                        //player hasn't moved
-                        for (Map.Entry<Vector4d, Pair<ArmorStand, Shulker>> entry : playerChunk.collidersToAdd.entrySet()) {
-                            ArmorStand stand = entry.getValue().left();
-                            Shulker shulker = entry.getValue().right();
+                Vector3d playerVector = proximityList.getKeyFromRaw(p.getLocation().toVector().toVector3d());
+                if (proximityList.chunkMap.containsKey(playerVector)) {
+                    Chunk playerChunk = proximityList.chunkMap.get(playerVector);
 
-                            Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
-                            packets.add(stand.getAddEntityPacket());
-                            packets.add(shulker.getAddEntityPacket());
-                            packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
-                            packets.add(new ClientboundSetPassengersPacket(stand));
-                            packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
-                            packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
-                            serverPlayer.connection.send(new ClientboundBundlePacket(packets));
+                    if (proximityList.playerChunkMap.containsKey(p.getEntityId())) {
+                        Chunk outdatedChunk = GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId());
+                        if (playerChunk.equals(proximityList.playerChunkMap.get(p.getEntityId()))) {
+                            //player hasn't moved
+                            sendStands(playerChunk.collidersToAdd, serverPlayer.connection);
+                        } else {
+                            System.out.println("realized -> realized");
+                            //player has moved chunks
+                            //playerChunk is current, the one in the list is outdated
+                            //delete all the previous entities
+//                            if (GameObjectTicker.getInstance().proximityList.playerChunkMap.containsKey(p.getEntityId())) {
+                            List<Pair<Integer, Integer>> toRemove = new ArrayList<>();
+                            for (Map.Entry<Vector4d, Pair<ArmorStand, Shulker>> entry : outdatedChunk.colliders.entrySet()) {
+                                if (!playerChunk.colliders.containsKey(entry.getKey())) {
+                                    toRemove.add(Pair.of(entry.getValue().left().getId(), entry.getValue().right().getId()));
+                                }
+                            }
+
+                            System.out.println("toRemove.size: " + toRemove.size());
+
+                            serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(toRemove.stream().mapToInt(Pair::left).toArray()));
+                            serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(toRemove.stream().mapToInt(Pair::right).toArray()));
+//                            }
+
+                            //send new ones
+                            List<Pair<ArmorStand, Shulker>> toUpdate = new ArrayList<>();
+                            for (Map.Entry<Vector4d, Pair<ArmorStand, Shulker>> entry : playerChunk.colliders.entrySet()) {
+                                if (!outdatedChunk.colliders.containsKey(entry.getKey())) {
+                                    toUpdate.add(entry.getValue());
+                                }
+                            }
+
+                            System.out.println("toUpdate.size: " + toUpdate.size());
+
+                            sendStands(toUpdate, serverPlayer.connection);
+
+                            //update
+                            proximityList.playerChunkMap.replace(p.getEntityId(), playerChunk);
                         }
                     } else {
-                        System.out.println("moved chunks");
-                        //player has moved chunks
-                        //playerChunk is current, the one in the list is outdated
-                        //delete all the previous entities
-                        if (GameObjectTicker.getInstance().proximityList.playerChunkMap.containsKey(p.getEntityId()) && GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId()) != null) {
-                            serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId()).colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.left().getId()).toArray()));
-                            serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId()).colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.right().getId()).toArray()));
-                        }
+                        //moved from null chunk to realized chunk
+                        System.out.println("null -> realized");
+                        sendStands(playerChunk.colliders, serverPlayer.connection);
 
-                        //send new ones
-                        for (Map.Entry<Vector4d, Pair<ArmorStand, Shulker>> entry : playerChunk.colliders.entrySet()) {
-                            ArmorStand stand = entry.getValue().left();
-                            Shulker shulker = entry.getValue().right();
-
-                            Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
-                            packets.add(stand.getAddEntityPacket());
-                            packets.add(shulker.getAddEntityPacket());
-                            packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
-                            packets.add(new ClientboundSetPassengersPacket(stand));
-                            packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
-                            packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
-                            serverPlayer.connection.send(new ClientboundBundlePacket(packets));
-                        }
-
-                        //update
-                        proximityList.playerChunkMap.replace(p.getEntityId(), playerChunk);
+                        proximityList.playerChunkMap.put(p.getEntityId(), playerChunk);
                     }
-                } else if (proximityList.playerChunkMap.containsKey(p.getEntityId()) && proximityList.playerChunkMap.get(p.getEntityId()) != null) {
-                    serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId()).colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.left().getId()).toArray()));
-                    serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId()).colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.right().getId()).toArray()));
+                } else if (proximityList.playerChunkMap.containsKey(p.getEntityId())) {
+                    System.out.println("realized -> null");
+                    Chunk outdatedChunk = GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId());
+                    System.out.println("toRemove: " + Arrays.toString(outdatedChunk.colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.right().getId()).toArray()));
+                    serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(outdatedChunk.colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.left().getId()).toArray()));
+                    serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(outdatedChunk.colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.right().getId()).toArray()));
+                    proximityList.playerChunkMap.remove(p.getEntityId());
                 }
-//                List<ArmorStand> stands = GameObjectTicker.getInstance().proximityList.get(p.getLocation().toVector().toVector3d());
             }
         }
 
         proximityList.tick();
 
         time++;
+    }
+
+    private void sendStands(Map<Vector4d, Pair<ArmorStand, Shulker>> map, ServerGamePacketListenerImpl connection) {
+        for (Map.Entry<Vector4d, Pair<ArmorStand, Shulker>> entry : map.entrySet()) {
+            ArmorStand stand = entry.getValue().left();
+            Shulker shulker = entry.getValue().right();
+
+            Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
+            packets.add(stand.getAddEntityPacket());
+            packets.add(shulker.getAddEntityPacket());
+            packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
+            packets.add(new ClientboundSetPassengersPacket(stand));
+            packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
+            packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
+            connection.send(new ClientboundBundlePacket(packets));
+        }
+    }
+
+    private void sendStands(List<Pair<ArmorStand, Shulker>> list, ServerGamePacketListenerImpl connection) {
+        for (Pair<ArmorStand, Shulker> entry : list) {
+            ArmorStand stand = entry.left();
+            Shulker shulker = entry.right();
+
+            Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
+            packets.add(stand.getAddEntityPacket());
+            packets.add(shulker.getAddEntityPacket());
+            packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
+            packets.add(new ClientboundSetPassengersPacket(stand));
+            packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
+            packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
+            connection.send(new ClientboundBundlePacket(packets));
+        }
     }
 
     public void addObject(GameObject gameObject) {

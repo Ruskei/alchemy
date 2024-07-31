@@ -1,5 +1,6 @@
 package com.ixume.alchemy.hitbox;
 
+import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
 import org.joml.Matrix3d;
 import org.joml.Vector3d;
@@ -10,10 +11,12 @@ public class ParallelogramHitboxFragment implements HitboxFragmentImpl {
     private HitboxFragment fragment;
     private final Vector3d edge1;
     private final Vector3d edge2;
+    private final World world;
 
     private Vector3d origin;
     private final Matrix3d basisChangeMatrix;
-    public ParallelogramHitboxFragment(Vector3d origin, Vector3d edge1, Vector3d edge2) {
+    public ParallelogramHitboxFragment(Vector3d origin, Vector3d edge1, Vector3d edge2, World world) {
+        this.world = world;
         this.origin = new Vector3d(origin);
         this.edge1 = edge1;
         this.edge2 = edge2;
@@ -21,7 +24,7 @@ public class ParallelogramHitboxFragment implements HitboxFragmentImpl {
         Vector3d pointB = new Vector3d(origin).add(this.edge2);
         Vector3d[] edges = new Vector3d[]{new Vector3d(edge1).mul(-1), edge2};
         Vector3d[] vertices = new Vector3d[]{new Vector3d(origin).add(edge1), new Vector3d(origin)};
-        fragment = new HitboxFragment(vertices, edges, new Vector3d(edge1).cross(edge2));
+        fragment = new HitboxFragment(vertices, edges, new Vector3d(edge1).cross(edge2), world);
 
         basisChangeMatrix = new Matrix3d(
                 pointB.x - origin.x, pointB.y - origin.y, pointB.z - origin.z,
@@ -38,7 +41,7 @@ public class ParallelogramHitboxFragment implements HitboxFragmentImpl {
         this.origin = origin;
         Vector3d[] edges = new Vector3d[]{new Vector3d(edge1).mul(-1), edge2};
         Vector3d[] vertices = new Vector3d[]{new Vector3d(origin).add(edge1), new Vector3d(origin)};
-        fragment = new HitboxFragment(vertices, edges, new Vector3d(edge1).cross(edge2));
+        fragment = new HitboxFragment(vertices, edges, new Vector3d(edge1).cross(edge2), world);
     }
 
     @Override

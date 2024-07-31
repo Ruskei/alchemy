@@ -12,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ProximityList {
     public final Map<Vector3d, Chunk> chunkMap;
-    private List<Chunk> toUpdate;
+    private final List<Chunk> toUpdate;
     public final Map<Integer, Chunk> playerChunkMap;
     private final Level level;
 

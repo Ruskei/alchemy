@@ -1,73 +1,36 @@
 package com.ixume.alchemy.gameobject.virtualobjects;
 
-import com.google.common.collect.ImmutableList;
 import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.gameobject.GameObject;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
+import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.gameobject.physical.Physical;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.*;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.level.Level;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Shulker;
 import org.bukkit.util.Transformation;
 import org.joml.Vector3d;
 import org.joml.Vector4d;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public class VirtualParallelepiped implements GameObject, Physical {
     private static final double RESOLUTION = 0.5;
-    private final World world;
     private final DisplayHitbox hitbox;
-    private boolean[] positions;
 
-    public VirtualParallelepiped(World w, Vector3d origin, Transformation transformation) {
-        this.world = w;
-        hitbox = new DisplayHitbox(origin, transformation);
+    public VirtualParallelepiped(Vector3d origin, Transformation transformation, World world) {
+        hitbox = new DisplayHitbox(origin, transformation, world);
 
-        Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), () -> {
-            GameObjectTicker.getInstance().getProximityList().addAll(cubify());
-        });
+        GameObjectTicker relevantTicker = TickersManager.getInstance().tickers.get(world.getName());
+        if (relevantTicker != null) {
+            Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), () -> relevantTicker.getProximityList().addAll(cubify()));
+        }
     }
-
-    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.2F);
 
     @Override
     public void tick() {
         hitbox.tick();
-//        if (positions != null) {
-//            World world = Bukkit.getServer().getWorld("world");
-//            Pair<Vector3d, Vector3d> boundingBox = hitbox.getBoundingBox();
-//            Vector3d min = boundingBox.left();
-//            Vector3d max = boundingBox.right();
-//            int width = (int) ((max.x - min.x) / RESOLUTION);
-//            int length = (int) ((max.z - min.z) / RESOLUTION);
-//            int height = (int) ((max.y - min.y) / RESOLUTION);
-//            for (int y = 0; y < height; y++) {
-//                for (int z = 0; z < length; z++) {
-//                    for (int x = 0; x < width; x++) {
-//                        if (positions[x + (z * width) + (y * width * length)]) {
-//                            world.spawnParticle(Particle.DUST, new Location(world, min.x + x * RESOLUTION, min.y + y * RESOLUTION, min.z + z * RESOLUTION), 1, edgeDust);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        cubes.forEach(VirtualShulker::render);
     }
 
     @Override
@@ -84,7 +47,7 @@ public class VirtualParallelepiped implements GameObject, Physical {
         int length = (int) ((max.z - min.z) / RESOLUTION);
         int height = (int) ((max.y - min.y) / RESOLUTION);
 //        create 3d
-        positions = new boolean[width * height * length];
+        boolean[] positions = new boolean[width * height * length];
         for (int y = 0; y < height; y++) {
             for (int z = 0; z < length; z++) {
                 for (int x = 0; x < width; x++) {
@@ -92,6 +55,9 @@ public class VirtualParallelepiped implements GameObject, Physical {
                 }
             }
         }
+
+        System.out.println("write positions: " + (System.currentTimeMillis() - start));
+        start = System.currentTimeMillis();
 
         List<Integer> occluded = new ArrayList<>();
         for (int y = 2; y < height - 2; y++) {
@@ -111,7 +77,7 @@ public class VirtualParallelepiped implements GameObject, Physical {
             positions[i] = false;
         }
 
-        System.out.println("write positions: " + (System.currentTimeMillis() - start));
+        System.out.println("convolution: " + (System.currentTimeMillis() - start));
         start = System.currentTimeMillis();
 
         List<Vector4d> shulkers = new ArrayList<>();
@@ -169,31 +135,9 @@ public class VirtualParallelepiped implements GameObject, Physical {
             }
         }
 
-        return shulkers;
+        System.out.println("finish: " + (System.currentTimeMillis() - start));
 
-//        for (Player p : world.getPlayers()) {
-//            ServerPlayer serverPlayer = ((CraftPlayer) p).getHandle();
-//            Level level = serverPlayer.level();
-//            ServerGamePacketListenerImpl connection = serverPlayer.connection;
-//            for (Vector4d v : shulkers) {
-//                net.minecraft.world.entity.decoration.ArmorStand stand = new net.minecraft.world.entity.decoration.ArmorStand(level, v.x, v.y - 1.975, v.z);
-//                stand.setInvisible(true);
-//                net.minecraft.world.entity.monster.Shulker shulker = new net.minecraft.world.entity.monster.Shulker(EntityType.SHULKER, level);
-//                Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
-//                shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
-//                shulker.getAttribute(Attributes.SCALE).setBaseValue(v.w);
-//                stand.passengers = ImmutableList.of(shulker);
-//                packets.add(stand.getAddEntityPacket());
-//                packets.add(shulker.getAddEntityPacket());
-//                packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
-//                packets.add(new ClientboundSetPassengersPacket(stand));
-//                packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
-//                packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
-//                connection.send(new ClientboundBundlePacket(packets));
-//            }
-//        }
-//
-//        System.out.println("finish: " + (System.currentTimeMillis() - start));
+        return shulkers;
     }
 
     private boolean convolute(int x, int y, int z, int width, int length, boolean[] positions) {
@@ -215,20 +159,6 @@ public class VirtualParallelepiped implements GameObject, Physical {
         }
 
         return true;
-    }
-
-    private ArmorStand spawnShulker(Vector3d pos, double scale) {
-        ArmorStand shulkerStand = world.spawn(new Location(world, pos.x, pos.y - 1.475 - 0.5, pos.z), ArmorStand.class);
-        shulkerStand.setGravity(false);
-        shulkerStand.setInvisible(true);
-        Shulker shulker = world.spawn(new Location(world, pos.x, pos.y, pos.z), Shulker.class);
-        shulker.setColor(DyeColor.RED);
-        shulker.setAI(false);
-        shulker.setGravity(false);
-        shulker.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(scale);
-//        shulker.setInvisible(true);
-        shulkerStand.addPassenger(shulker);
-        return shulkerStand;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.ixume.alchemy.hitbox;
 
 import com.ixume.alchemy.Alchemy;
+import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
 import org.joml.Vector3d;
 
@@ -9,13 +10,13 @@ import java.util.List;
 public class TriangleHitboxFragment implements HitboxFragmentImpl {
     private final HitboxFragment fragment;
 
-    public TriangleHitboxFragment(Vector3d[] vertices, Alchemy plugin) {
+    public TriangleHitboxFragment(Vector3d[] vertices, World world) {
         Vector3d[] edges = new Vector3d[3];
         for (int i = 0; i < 3; i++) {
             edges[i] = new Vector3d(vertices[(i + 1) % 3]).sub(vertices[i]);
         }
 
-        fragment = new HitboxFragment(vertices, edges, new Vector3d(edges[0]).cross(edges[1]).normalize());
+        fragment = new HitboxFragment(vertices, edges, new Vector3d(edges[0]).cross(edges[1]).normalize(), world);
     }
 
     public List<Vector3d> intersect(HitboxFragmentImpl hitboxFragment) {

@@ -10,18 +10,11 @@ import net.minecraft.world.level.Level;
 import org.joml.Vector4d;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Chunk {
     private final Level level;
-    public Map<Vector4d, Pair<ArmorStand, Shulker>> colliders;
-    public Map<Vector4d, Pair<ArmorStand, Shulker>> collidersToAdd;
-
-    public Chunk(Level level) {
-        this.level = level;
-        colliders = new ConcurrentHashMap<>();
-        collidersToAdd = new ConcurrentHashMap<>();
-    }
+    public final Map<Vector4d, Pair<ArmorStand, Shulker>> colliders;
+    public final Map<Vector4d, Pair<ArmorStand, Shulker>> collidersToAdd;
 
     public Chunk (Level level, Vector4d v, int aID, int sID) {
         this.level = level;
@@ -46,7 +39,7 @@ public class Chunk {
         net.minecraft.world.entity.monster.Shulker shulker = new net.minecraft.world.entity.monster.Shulker(EntityType.SHULKER, level);
         shulker.setId(sID);
         shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
-        shulker.getAttribute(Attributes.SCALE).setBaseValue(v.w);
+        Objects.requireNonNull(shulker.getAttribute(Attributes.SCALE)).setBaseValue(v.w);
         stand.passengers = ImmutableList.of(shulker);
         return Pair.of(stand, shulker);
     }

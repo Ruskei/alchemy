@@ -6,10 +6,10 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 public class DisplayTransformation {
-    public Vector3f translation;
-    public Quaternionf leftRotation;
-    public Vector3f scale;
-    public Quaternionf rightRotation;
+    public final Vector3f translation;
+    public final Quaternionf leftRotation;
+    public final Vector3f scale;
+    public final Quaternionf rightRotation;
     private Matrix4f matrix;
 
     public Matrix4f getMatrix() {

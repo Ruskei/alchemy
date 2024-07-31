@@ -12,11 +12,13 @@ public class HitboxFragment {
     private final Vector3d[] vertices;
     private final Vector3d[] edges;
     private final Vector3d normal;
+    private final World world;
 
-    public HitboxFragment(Vector3d[] vertices, Vector3d[] edges, Vector3d normal) {
+    public HitboxFragment(Vector3d[] vertices, Vector3d[] edges, Vector3d normal, World world) {
         this.vertices = vertices;
         this.edges = edges;
         this.normal = normal;
+        this.world = world;
     }
 
     public Vector3d[] getVertices() {
@@ -39,7 +41,6 @@ public class HitboxFragment {
     private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.1F);
 
     public void render() {
-        World world = Bukkit.getServer().getWorld("world");
         double INTERVAL = 0.2;
         for (int i = 0; i < edges.length; i++) {
             Vector3d edge = edges[i];

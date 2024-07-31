@@ -3,6 +3,7 @@ package com.ixume.alchemy.listener;
 import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.Spike;
+import com.ixume.alchemy.gameobject.TickersManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -35,9 +36,11 @@ public class PlayerInteractListener implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction().equals(Action.RIGHT_CLICK_AIR) && event.getHand().getGroup().equals(EquipmentSlotGroup.MAINHAND) && event.getItem().getType().equals(Material.ACACIA_BOAT)) {
-            event.setCancelled(true);
             Player p = event.getPlayer();
             World w = p.getWorld();
+            GameObjectTicker relevantTicker = TickersManager.getInstance().tickers.get(w.getName());
+            if (relevantTicker == null) return;
+            event.setCancelled(true);
             Location origin = p.getEyeLocation();
             Vector dir = p.getLocation().getDirection();
             RayTraceResult rayTraceResult = w.rayTraceBlocks(origin, dir, 20);
@@ -57,7 +60,7 @@ public class PlayerInteractListener implements Listener {
 
                     Vector3f target = closest.getLocation().toVector().toVector3f().add(0, 1, 0);
                     Vector3f spikeOrigin = rayTraceResult.getHitPosition().toVector3f();
-                    GameObjectTicker.getInstance().addObject(new Spike(spikeOrigin, target, rayTraceResult.getHitBlock().getBlockData(), event.getPlayer()));
+                    relevantTicker.addObject(new Spike(spikeOrigin, target, rayTraceResult.getHitBlock().getBlockData(), event.getPlayer()));
                 }
             }
         }

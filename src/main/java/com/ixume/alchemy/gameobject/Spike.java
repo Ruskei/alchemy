@@ -31,6 +31,7 @@ public class Spike implements GameObject, Hitbox {
     private final List<BlockDisplay> displays;
     private int progress;
     private final World world;
+    private final GameObjectTicker ticker;
     private final Vector3d origin;
     private final BlockData blockData;
     private final Vector3f dir;
@@ -44,6 +45,7 @@ public class Spike implements GameObject, Hitbox {
         displays = new ArrayList<>();
         progress = 0;
         world = player.getWorld();
+        ticker = TickersManager.getInstance().tickers.get(world.getName());
         this.blockData = blockData;
         spikeOrigin.sub(0, 0.5f, 0);
 
@@ -66,7 +68,7 @@ public class Spike implements GameObject, Hitbox {
         defaultTransformationMatrix = transformation.getMatrix();
 
         Matrix4f hitboxMatrix = new Matrix4f(this.defaultTransformationMatrix).translate(0.25f, 0, 0.25f).scale(0.5f, SPEED, 0.5f).translateLocal(0, -GROUND_PADDING, 0);
-        hitbox = new DisplayHitbox(origin, hitboxMatrix);
+        hitbox = new DisplayHitbox(origin, hitboxMatrix, world);
     }
 
     private void spawn() {
@@ -112,7 +114,7 @@ public class Spike implements GameObject, Hitbox {
     @Override
     public void kill() {
         displays.forEach(BlockDisplay::remove);
-        GameObjectTicker.getInstance().removeObject(this);
+        ticker.removeObject(this);
     }
 
     @Override

@@ -1,8 +1,8 @@
 package com.ixume.alchemy.listener;
 
 import com.ixume.alchemy.Alchemy;
-import com.ixume.alchemy.gameobject.Chunk;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
+import com.ixume.alchemy.gameobject.TickersManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,9 +23,12 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent joinEvent) {
         Player player = joinEvent.getPlayer();
-        Vector3d playerVector =  GameObjectTicker.getInstance().proximityList.getKeyFromRaw(player.getLocation().toVector().toVector3d());
-        if (GameObjectTicker.getInstance().proximityList.chunkMap.containsKey(playerVector)) {
-            GameObjectTicker.getInstance().getProximityList().playerChunkMap.put(player.getEntityId(), GameObjectTicker.getInstance().proximityList.chunkMap.get(playerVector));
+        GameObjectTicker relevantTicker = TickersManager.getInstance().tickers.get(player.getWorld().getName());
+        if (relevantTicker != null) {
+            Vector3d playerVector = relevantTicker.proximityList.getKeyFromRaw(player.getLocation().toVector().toVector3d());
+            if (relevantTicker.proximityList.chunkMap.containsKey(playerVector)) {
+                relevantTicker.getProximityList().playerChunkMap.put(player.getEntityId(), relevantTicker.proximityList.chunkMap.get(playerVector));
+            }
         }
     }
 }

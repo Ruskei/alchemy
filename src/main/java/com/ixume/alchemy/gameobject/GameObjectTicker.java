@@ -2,7 +2,6 @@ package com.ixume.alchemy.gameobject;
 
 import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.hitbox.Hitbox;
-import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
@@ -26,30 +25,20 @@ public class GameObjectTicker {
     private volatile List<GameObject> objectsToAdd;
     private volatile List<GameObject> objectsToRemove;
     public volatile ProximityList proximityList;
+    private final World world;
 
-    private static GameObjectTicker INSTANCE;
-    public static void init(Alchemy plugin) {
-        if (INSTANCE == null) {
-            INSTANCE = new GameObjectTicker(plugin);
-        }
-    }
-
-    public static GameObjectTicker getInstance() {return INSTANCE;}
-
-    private GameObjectTicker(Alchemy plugin) {
+    public GameObjectTicker(Alchemy plugin, World world) {
+        this.world = world;
         time = 0;
         objects = new ArrayList<>();
         objectsToAdd = new ArrayList<>();
         objectsToRemove = new ArrayList<>();
-        proximityList = new ProximityList(Bukkit.getWorld("world"));
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            GameObjectTicker.INSTANCE.objects.stream().filter(o -> o instanceof Hitbox).map(o -> ((Hitbox) o)).forEach(o -> o.getFragments().forEach(HitboxFragmentImpl::render));
-            tick();
-        }, 10, 1);
+        proximityList = new ProximityList(world);
+//            GameObjectTicker.INSTANCE.objects.stream().filter(o -> o instanceof Hitbox).map(o -> ((Hitbox) o)).forEach(o -> o.getFragments().forEach(HitboxFragmentImpl::render));
+        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 10, 1);
     }
 
     private void tick() {
-        World world = Bukkit.getWorld("world");
         for (GameObject object : objects) {
             object.tick();
             if (object instanceof Hitbox hitbox) {
@@ -67,10 +56,10 @@ public class GameObjectTicker {
             }
         }
 
-        GameObjectTicker.getInstance().objects.removeAll(GameObjectTicker.getInstance().objectsToRemove);
-        GameObjectTicker.getInstance().objectsToRemove.clear();
-        GameObjectTicker.getInstance().objects.addAll(GameObjectTicker.getInstance().objectsToAdd);
-        GameObjectTicker.getInstance().objectsToAdd.clear();
+        this.objects.removeAll(this.objectsToRemove);
+        this.objectsToRemove.clear();
+        this.objects.addAll(this.objectsToAdd);
+        this.objectsToAdd.clear();
 
         if (time % 2 == 0) {
             for (Player p : world.getPlayers()) {
@@ -80,7 +69,7 @@ public class GameObjectTicker {
                     Chunk playerChunk = proximityList.chunkMap.get(playerVector);
 
                     if (proximityList.playerChunkMap.containsKey(p.getEntityId())) {
-                        Chunk outdatedChunk = GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId());
+                        Chunk outdatedChunk = this.proximityList.playerChunkMap.get(p.getEntityId());
                         if (playerChunk.equals(proximityList.playerChunkMap.get(p.getEntityId()))) {
                             //player hasn't moved
                             sendStands(playerChunk.collidersToAdd, serverPlayer.connection);
@@ -89,7 +78,7 @@ public class GameObjectTicker {
                             //player has moved chunks
                             //playerChunk is current, the one in the list is outdated
                             //delete all the previous entities
-//                            if (GameObjectTicker.getInstance().proximityList.playerChunkMap.containsKey(p.getEntityId())) {
+//                            if (this..proximityList.playerChunkMap.containsKey(p.getEntityId())) {
                             List<Pair<Integer, Integer>> toRemove = new ArrayList<>();
                             for (Map.Entry<Vector4d, Pair<ArmorStand, Shulker>> entry : outdatedChunk.colliders.entrySet()) {
                                 if (!playerChunk.colliders.containsKey(entry.getKey())) {
@@ -127,7 +116,7 @@ public class GameObjectTicker {
                     }
                 } else if (proximityList.playerChunkMap.containsKey(p.getEntityId())) {
                     System.out.println("realized -> null");
-                    Chunk outdatedChunk = GameObjectTicker.getInstance().proximityList.playerChunkMap.get(p.getEntityId());
+                    Chunk outdatedChunk = this.proximityList.playerChunkMap.get(p.getEntityId());
                     System.out.println("toRemove: " + Arrays.toString(outdatedChunk.colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.right().getId()).toArray()));
                     serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(outdatedChunk.colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.left().getId()).toArray()));
                     serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(outdatedChunk.colliders.values().stream().mapToInt(armorStandShulkerPair -> armorStandShulkerPair.right().getId()).toArray()));

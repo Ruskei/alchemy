@@ -141,17 +141,18 @@ public class VirtualParallelepiped implements GameObject, Physical {
     }
 
     private boolean convolute(int x, int y, int z, int width, int length, boolean[] positions) {
-        for (int y1 = y - 2; y1 <= y + 2; y1++) {
-            for (int z1 = z - 2; z1 <= z + 2; z1++) {
-                for (int x1 = x - 2; x1 <= x + 2; x1++) {
-                    if ((x1 == x - 2 && y1 == y - 2 && z1 == z - 2)
-                    || (x1 == x + 2 && y1 == y - 2 && z1 == z - 2)
-                    || (x1 == x + 2 && y1 == y + 2 && z1 == z - 2)
-                    || (x1 == x + 2 && y1 == y + 2 && z1 == z + 2)
-                    || (x1 == x + 2 && y1 == y - 2 && z1 == z + 2)
-                    || (x1 == x - 2 && y1 == y + 2 && z1 == z + 2)
-                    || (x1 == x - 2 && y1 == y - 2 && z1 == z + 2)
-                    || (x1 == x - 2 && y1 == y + 2 && z1 == z - 2)) continue;
+        int SIZE = 2;
+        for (int y1 = y - SIZE; y1 <= y + SIZE; y1++) {
+            for (int z1 = z - SIZE; z1 <= z + SIZE; z1++) {
+                for (int x1 = x - SIZE; x1 <= x + SIZE; x1++) {
+                    if ((x1 == x - SIZE && y1 == y - SIZE && z1 == z - SIZE)
+                    || (x1 == x + SIZE && y1 == y - SIZE && z1 == z - SIZE)
+                    || (x1 == x + SIZE && y1 == y + SIZE && z1 == z - SIZE)
+                    || (x1 == x + SIZE && y1 == y + SIZE && z1 == z + SIZE)
+                    || (x1 == x + SIZE && y1 == y - SIZE && z1 == z + SIZE)
+                    || (x1 == x - SIZE && y1 == y + SIZE && z1 == z + SIZE)
+                    || (x1 == x - SIZE && y1 == y - SIZE && z1 == z + SIZE)
+                    || (x1 == x - SIZE && y1 == y + SIZE && z1 == z - SIZE)) continue;
 
                     if (!positions[x1 + (z1 * width) + (y1 * width * length)]) return false;
                 }

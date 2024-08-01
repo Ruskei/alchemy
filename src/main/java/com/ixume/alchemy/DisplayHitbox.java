@@ -129,17 +129,17 @@ public class DisplayHitbox implements GameObject, Hitbox {
                 (P.x - X.x), (P.y - X.y), (P.z - X.z),
                 (B.x - X.x), (B.y - X.y), (B.z - X.z),
                 (C.x - X.x), (C.y - X.y), (C.z - X.z)).determinant() / d;
+        if (u < 0 || u > 1) return false;
         double w = new Matrix3d(
                 (A.x - X.x), (A.y - X.y), (A.z - X.z),
                 (P.x - X.x), (P.y - X.y), (P.z - X.z),
                 (C.x - X.x), (C.y - X.y), (C.z - X.z)).determinant() / d;
+        if (w < 0 || w > 1) return false;
         double v = new Matrix3d(
                 (A.x - X.x), (A.y - X.y), (A.z - X.z),
                 (B.x - X.x), (B.y - X.y), (B.z - X.z),
                 (P.x - X.x), (P.y - X.y), (P.z - X.z)).determinant() / d;
-        return (0 <= u && u <= 1 &&
-                0 <= w && w <= 1 &&
-                0 <= v && v <= 1);
+        return !(v < 0) && !(v > 1);
     }
 
     public Pair<Vector3d, Vector3d> getBoundingBox() {

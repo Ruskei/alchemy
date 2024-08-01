@@ -59,7 +59,7 @@ public class ProximityList {
     }
 
     public Vector3d getKeyFromRaw(Vector3d pos) {
-        return new Vector3d(Math.floor(pos.x / 3d), Math.floor(pos.y / 3d), Math.floor(pos.z / 3d));
+        return new Vector3d(Math.floor(pos.x / 2d), Math.floor(pos.y / 2d), Math.floor(pos.z / 2d));
     }
 
     private VirtualShulker createShulker(Vector4d v, int aID, int sID) {
@@ -69,6 +69,7 @@ public class ProximityList {
         net.minecraft.world.entity.monster.Shulker shulker = new net.minecraft.world.entity.monster.Shulker(EntityType.SHULKER, level);
         shulker.setId(sID);
         shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
+//        shulker.setInvisible(true);
         Objects.requireNonNull(shulker.getAttribute(Attributes.SCALE)).setBaseValue(v.w);
         stand.passengers = ImmutableList.of(shulker);
 

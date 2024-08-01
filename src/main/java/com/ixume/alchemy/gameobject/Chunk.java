@@ -4,14 +4,15 @@ import com.ixume.alchemy.gameobject.virtualobjects.VirtualShulker;
 import org.joml.Vector4d;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Chunk {
     public final Map<Vector4d, VirtualShulker> colliders;
     public final Map<Vector4d, VirtualShulker> collidersToAdd;
 
     public Chunk (Vector4d v, VirtualShulker s) {
-        colliders = new HashMap<>();
-        collidersToAdd = new HashMap<>();
+        colliders = new ConcurrentHashMap<>();
+        collidersToAdd = new ConcurrentHashMap<>();
         collidersToAdd.put(v, s);
     }
 

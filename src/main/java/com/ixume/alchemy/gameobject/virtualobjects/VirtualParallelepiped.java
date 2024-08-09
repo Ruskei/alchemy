@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VirtualParallelepiped implements GameObject, Physical {
-    private static final double RESOLUTION = 0.5;
+    private static final double RESOLUTION = 0.25;
     private final DisplayHitbox hitbox;
     private boolean[] cubes;
     private final World world;
@@ -73,7 +73,8 @@ public class VirtualParallelepiped implements GameObject, Physical {
 //        create 3d
         boolean[] raw = getRaw(min, width, height, length);
 //        cubes = raw;
-        cubes = getCubes(raw, width, height, length);
+        boolean[] rawCubes = getCubes(raw, width, height, length);
+        boolean[] occludedCubes = rawCubes.clone();
 
         System.out.println("write positions: " + (System.currentTimeMillis() - start));
         start = System.currentTimeMillis();
@@ -83,8 +84,8 @@ public class VirtualParallelepiped implements GameObject, Physical {
             for (int z = 1; z < length - 1; z++) {
                 for (int x = 1; x < width - 1; x++) {
                     int i = x + (z * width) + (y * width * length);
-                    if (cubes[i]) {
-                        if (convolute(x, y, z, width, length, cubes)) {
+                    if (rawCubes[i]) {
+                        if (convolute(x, y, z, width, length, rawCubes)) {
                             occluded.add(i);
                         }
                     }
@@ -93,8 +94,11 @@ public class VirtualParallelepiped implements GameObject, Physical {
         }
 
         for (Integer i : occluded) {
-            cubes[i] = false;
+            occludedCubes[i] = false;
         }
+
+//        cubes = occludedCubes;
+
 //
         System.out.println("convolution: " + (System.currentTimeMillis() - start));
         start = System.currentTimeMillis();
@@ -106,54 +110,77 @@ public class VirtualParallelepiped implements GameObject, Physical {
                 for (int x = 0; x < width; x++) {
                     //check if this position is inside the shape
                     int index = x + (z * width) + (y * width * length);
-                    if (!cubes[index]) continue;
+                    if (!rawCubes[index]) continue;
                     //find largest cube now,
-                    int size = 0;
+                    int testSize = 0;
+                    int usefulSize = 0;
                     check:
                     while (true) {
-                        int testSize = size;
                         if (x + testSize >= width || y + testSize >= height || z + testSize >= length) break;
+                        boolean useful = false;
                         //pretend size is 1 more than it is, then if that's fine, move on, if it's not, leave
                         //if any of these are false, then the cube cannot be formed
                         for (int j = y; j <= y + testSize; j++) {
                             for (int i = x; i <= x + testSize; i++) {
-                                if (!cubes[i + ((z + testSize) * width) + (j * width * length)]) break check;
+                                int index2 = i + ((z + testSize) * width) + (j * width * length);
+                                if (!rawCubes[index2]) break check;
+                                if (!useful && occludedCubes[index2]) {
+                                    useful = true;
+                                    break;
+                                }
                             }
                         }
 
                         for (int j = y; j <= y + testSize; j++) {
                             for (int i = z; i < z + testSize; i++) {
-                                if (!cubes[x + testSize + (i * width) + (j * width * length)]) break check;
+                                int index2 = x + testSize + (i * width) + (j * width * length);
+                                if (!rawCubes[index2]) break check;
+                                if (!useful && occludedCubes[index2]) {
+                                    useful = true;
+                                    break;
+                                }
                             }
                         }
 
                         for (int j = z; j < z + testSize; j++) {
                             for (int i = x; i < x + testSize; i++) {
-                                if (!cubes[i + (j * width) + ((y + testSize) * width * length)]) break check;
-                            }
-                        }
-
-                        size++;
-                    }
-
-                    if (size > 0) {
-                        //hollow out the cube
-                        if (size > 1) {
-                            for (int y1 = y + 1; y1 < y + size; y1++) {
-                                for (int z1 = z + 1; z1 < z + size; z1++) {
-                                    for (int x1 = x + 1; x1 < x + size; x1++) {
-                                        cubes[x1 + (z1 * width) + (y1 * width * length)] = false;
-                                    }
+                                int index2 = i + (j * width) + ((y + testSize) * width * length);
+                                if (!rawCubes[index2]) break check;
+                                if (!useful && occludedCubes[index2]) {
+                                    useful = true;
+                                    break;
                                 }
                             }
                         }
 
-                        shulkers.add(new Vector4d(min.x + x * RESOLUTION + size * RESOLUTION / 2d - RESOLUTION / 2d, min.y + y * RESOLUTION - RESOLUTION / 2d, min.z + z * RESOLUTION + size * RESOLUTION / 2d - RESOLUTION / 2d, size * RESOLUTION));
+//                        if (!useful) break;
+                        testSize++;
+                        if (useful) usefulSize = testSize;
+                    }
+
+//                    usefulSize = testSize;
+
+                    if (usefulSize > 0) {
+                        //hollow out the cube
+//                        if (usefulSize > 1) {
+                            for (int y1 = y; y1 < y + usefulSize; y1++) {
+                                for (int z1 = z; z1 < z + usefulSize; z1++) {
+                                    for (int x1 = x; x1 < x + usefulSize; x1++) {
+                                        int index2 = x1 + (z1 * width) + (y1 * width * length);
+//                                        rawCubes[index2] = false;
+                                        occludedCubes[index2] = false;
+                                    }
+                                }
+                            }
+//                        }
+
+                        shulkers.add(new Vector4d(min.x + x * RESOLUTION + usefulSize * RESOLUTION / 2d - RESOLUTION / 2d, min.y + y * RESOLUTION - RESOLUTION / 2d, min.z + z * RESOLUTION + usefulSize * RESOLUTION / 2d - RESOLUTION / 2d, usefulSize * RESOLUTION));
                     }
                 }
             }
         }
 
+        System.out.println(shulkers.size());
         System.out.println("finish: " + (System.currentTimeMillis() - start));
 
         return shulkers;

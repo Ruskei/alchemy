@@ -5,6 +5,7 @@ import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import com.ixume.alchemy.hitbox.ParallelogramHitboxFragment;
 import it.unimi.dsi.fastutil.Pair;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.util.Transformation;
@@ -149,7 +150,7 @@ public class DisplayHitbox implements GameObject, Hitbox {
             min = new Vector3d(Math.min(min.x, vertex.x), Math.min(min.y, vertex.y), Math.min(min.z, vertex.z));
             max = new Vector3d(Math.max(max.x, vertex.x), Math.max(max.y, vertex.y), Math.max(max.z, vertex.z));
         }
-
+        
         return Pair.of(min, max);
     }
 }

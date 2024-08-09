@@ -21,6 +21,7 @@ public class ProximityList {
     private final List<Chunk> toUpdate;
     public final Map<Integer, Chunk> playerChunkMap;
     private final Level level;
+    private final static double CHUNK_SIZE = 2d;
 
     public ProximityList(World world) {
         this.level = ((CraftWorld) world).getHandle();
@@ -40,9 +41,10 @@ public class ProximityList {
         int aID = EntityIDManager.getInstance().getID();
         int sID = EntityIDManager.getInstance().getID();
         VirtualShulker shulker = createShulker(toAdd, aID, sID);
-        for (int x = (int) (key.x - 1); x <= key.x + 1; x++) {
-            for (int y = (int) (key.y - 1); y <= key.y + 1; y++) {
-                for (int z = (int) (key.z - 1); z <= key.z + 1; z++) {
+        double chunkSpace = Math.max(1, toAdd.w);
+        for (int x = (int) Math.floor(key.x - chunkSpace); x <= Math.ceil(key.x + chunkSpace); x++) {
+            for (int y = (int) Math.floor(key.y - chunkSpace); y <= Math.ceil(key.y + chunkSpace); y++) {
+                for (int z = (int) Math.floor(key.z - chunkSpace); z <= Math.ceil(key.z + chunkSpace); z++) {
                     Vector3d key2 = new Vector3d(x, y, z);
                     chunkMap.merge(key2, new Chunk(toAdd, shulker), (a, b) -> {
                         a.put(toAdd, shulker);
@@ -59,7 +61,7 @@ public class ProximityList {
     }
 
     public Vector3d getKeyFromRaw(Vector3d pos) {
-        return new Vector3d(Math.floor(pos.x / 2d), Math.floor(pos.y / 2d), Math.floor(pos.z / 2d));
+        return new Vector3d(Math.floor(pos.x / CHUNK_SIZE), Math.floor(pos.y / CHUNK_SIZE), Math.floor(pos.z / CHUNK_SIZE));
     }
 
     private VirtualShulker createShulker(Vector4d v, int aID, int sID) {

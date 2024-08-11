@@ -5,7 +5,6 @@ import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import com.ixume.alchemy.hitbox.ParallelogramHitboxFragment;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.util.Transformation;
@@ -141,6 +140,33 @@ public class DisplayHitbox implements GameObject, Hitbox {
                 (B.x - X.x), (B.y - X.y), (B.z - X.z),
                 (P.x - X.x), (P.y - X.y), (P.z - X.z)).determinant() / d;
         return !(v < 0) && !(v > 1);
+    }
+
+    public long inInsideLong(Vector3d P) {
+        Vector3d X = new Vector3d(vertices.get(0));
+        Vector3d A = new Vector3d(vertices.get(1));
+        Vector3d B = new Vector3d(vertices.get(3));
+        Vector3d C = new Vector3d(vertices.get(4));
+
+        double d = new Matrix3d(
+                (A.x - X.x), (A.y - X.y), (A.z - X.z),
+                (B.x - X.x), (B.y - X.y), (B.z - X.z),
+                (C.x - X.x), (C.y - X.y), (C.z - X.z)).determinant();
+        double u = new Matrix3d(
+                (P.x - X.x), (P.y - X.y), (P.z - X.z),
+                (B.x - X.x), (B.y - X.y), (B.z - X.z),
+                (C.x - X.x), (C.y - X.y), (C.z - X.z)).determinant() / d;
+        if (u < 0 || u > 1) return 0;
+        double w = new Matrix3d(
+                (A.x - X.x), (A.y - X.y), (A.z - X.z),
+                (P.x - X.x), (P.y - X.y), (P.z - X.z),
+                (C.x - X.x), (C.y - X.y), (C.z - X.z)).determinant() / d;
+        if (w < 0 || w > 1) return 0;
+        double v = new Matrix3d(
+                (A.x - X.x), (A.y - X.y), (A.z - X.z),
+                (B.x - X.x), (B.y - X.y), (B.z - X.z),
+                (P.x - X.x), (P.y - X.y), (P.z - X.z)).determinant() / d;
+        return !(v < 0) && !(v > 1) ? 1 : 0;
     }
 
     public Pair<Vector3d, Vector3d> getBoundingBox() {

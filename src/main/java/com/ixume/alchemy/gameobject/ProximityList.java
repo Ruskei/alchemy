@@ -41,7 +41,8 @@ public class ProximityList {
         int aID = EntityIDManager.getInstance().getID();
         int sID = EntityIDManager.getInstance().getID();
         VirtualShulker shulker = createShulker(toAdd, aID, sID);
-        double chunkSpace = Math.max(1, toAdd.w);
+        double chunkSpace = 3;
+//        double chunkSpace = Math.max(1, toAdd.w / CHUNK_SIZE);
         for (int x = (int) Math.floor(key.x - chunkSpace); x <= Math.ceil(key.x + chunkSpace); x++) {
             for (int y = (int) Math.floor(key.y - chunkSpace); y <= Math.ceil(key.y + chunkSpace); y++) {
                 for (int z = (int) Math.floor(key.z - chunkSpace); z <= Math.ceil(key.z + chunkSpace); z++) {
@@ -71,6 +72,7 @@ public class ProximityList {
         net.minecraft.world.entity.monster.Shulker shulker = new net.minecraft.world.entity.monster.Shulker(EntityType.SHULKER, level);
         shulker.setId(sID);
         shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
+        shulker.setPos(v.x, v.y, v.z);
 //        shulker.setInvisible(true);
         Objects.requireNonNull(shulker.getAttribute(Attributes.SCALE)).setBaseValue(v.w);
         stand.passengers = ImmutableList.of(shulker);

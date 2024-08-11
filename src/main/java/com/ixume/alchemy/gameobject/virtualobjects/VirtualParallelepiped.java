@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VirtualParallelepiped implements GameObject, Physical {
-    private static final double RESOLUTION = 0.25;
+    private static final double RESOLUTION = 0.5;
     private final DisplayHitbox hitbox;
-    private boolean[] cubes;
+    private long[] cubes;
     private final World world;
 
     public VirtualParallelepiped(Vector3d origin, Transformation transformation, World world) {
@@ -27,32 +27,32 @@ public class VirtualParallelepiped implements GameObject, Physical {
 
         GameObjectTicker relevantTicker = TickersManager.getInstance().tickers.get(world.getName());
         if (relevantTicker != null) {
-            Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), () -> relevantTicker.getProximityList().addAll(cubify()));
+            Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), () -> relevantTicker.getProximityList().addAll(binaryCubify()));
         }
     }
 
     @Override
     public void tick() {
         hitbox.tick();
-//        Pair<Vector3d, Vector3d> boundingBox = hitbox.getBoundingBox();
-//        Vector3d min = boundingBox.left();
-//        Vector3d max = boundingBox.right();
-//        int width = (int) ((max.x - min.x) / RESOLUTION);
-//        int length = (int) ((max.z - min.z) / RESOLUTION);
-//        int height = (int) ((max.y - min.y) / RESOLUTION);
-//
-//        if (cubes != null) {
-//            for (int y = 0; y < height; y++) {
-//                for (int z = 0; z < length; z++) {
-//                    for (int x = 0; x < width; x++) {
-//                        if (cubes[x + (z * width) + (y * width * length)]) {
-//                            Vector3d p = new Vector3d(min.x + x * RESOLUTION, min.y + y * RESOLUTION, min.z + z * RESOLUTION);
-//                            world.spawnParticle(Particle.DUST, new Location(world, p.x, p.y, p.z), 1, edgeDust);
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        Pair<Vector3d, Vector3d> boundingBox = hitbox.getBoundingBox();
+        Vector3d min = boundingBox.left();
+        Vector3d max = boundingBox.right();
+        int width = (int) ((max.x - min.x) / RESOLUTION);
+        int length = (int) ((max.z - min.z) / RESOLUTION);
+        int height = (int) ((max.y - min.y) / RESOLUTION);
+
+        if (cubes != null) {
+                for (int z = 0; z < length; z++) {
+                    for (int x = 0; x < width; x++) {
+                        for (int y = 0; y < height; y++) {
+                            if (((cubes[x + (z * width)] >> y) & 1) == 1) {
+                                Vector3d p = new Vector3d(min.x + x * RESOLUTION + RESOLUTION / 2d, min.y + y * RESOLUTION + RESOLUTION / 2d, min.z + z * RESOLUTION + RESOLUTION / 2d);
+                                world.spawnParticle(Particle.DUST, new Location(world, p.x, p.y, p.z), 1, edgeDust);
+                            }
+                        }
+                }
+            }
+        }
     }
 
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
@@ -62,7 +62,71 @@ public class VirtualParallelepiped implements GameObject, Physical {
 
     }
 
-    private List<Vector4d> cubify() {
+    private List<Vector4d> binaryCubify() {
+        long start = System.currentTimeMillis();
+
+        Pair<Vector3d, Vector3d> boundingBox = hitbox.getBoundingBox();
+        Vector3d min = boundingBox.left();
+        Vector3d max = boundingBox.right();
+        int width = (int) Math.floor((max.x - min.x) / RESOLUTION);
+        int length = (int) Math.floor((max.z - min.z) / RESOLUTION);
+        int height = (int) Math.floor((max.y - min.y) / RESOLUTION);
+        if (width > 63 || length > 63 || height > 63) throw new IndexOutOfBoundsException();
+
+        long[] points = new long[(width + 1) * (length + 1)];
+//        long full = 0xFFFFFFFFFFFFFFFFL;
+//        long xMask = full << (64 - width);
+//        long yMask = full << (64 - height);
+//        long zMask = full << (64 - length);
+
+        //set the general positions && only choose those with potential to be cubes
+        for (int z = 0; z < length + 1; z++) {
+            for (int x = 0; x < width + 1; x++) {
+                int index = z * width + x;
+                for (int y = 0; y < height + 1; y++) {
+                    points[index] |= (hitbox.inInsideLong(new Vector3d(min.x + x * RESOLUTION + RESOLUTION, min.y + y * RESOLUTION, min.z + z * RESOLUTION)) << y);
+                }
+
+                points[index] &= (points[index] >> 1);
+            }
+        }
+
+        System.out.println("write positions: " + (System.currentTimeMillis() - start));
+        start = System.currentTimeMillis();
+
+        long[] cubes = new long[width * length];
+        //get actual cubes from positions
+        for (int z = 0; z < length; z++) {
+            for (int x = 0; x < width; x++) {
+                int index = z * width + x;
+                cubes[index] = points[index] & points[index + 1] & points[index + width] & points[index + width + 1];
+            }
+        }
+
+        this.cubes = cubes;
+
+        System.out.println("cubify: " + (System.currentTimeMillis() - start));
+        start = System.currentTimeMillis();
+        //cull occluded
+        long[] culledCubes = new long[width * length];
+
+        for (int z = 1; z < length - 1; z++) {
+            for (int x = 1; x < width - 1; x++) {
+                int index = z * width + x;
+                long column = cubes[index];
+                culledCubes[index] = column & ~(column & (column >> 1) & (column << 1) & cubes[index - 1] & cubes[index + 1] & cubes[index + width] & cubes[index - width]);
+            }
+        }
+
+        this.cubes = culledCubes;
+
+        System.out.println("cull occluded: " + (System.currentTimeMillis() - start));
+        start = System.currentTimeMillis();
+
+        return new ArrayList<>();
+    }
+
+    private List<Vector4d> naiveCubify() {
         long start = System.currentTimeMillis();
         Pair<Vector3d, Vector3d> boundingBox = hitbox.getBoundingBox();
         Vector3d min = boundingBox.left();
@@ -97,7 +161,7 @@ public class VirtualParallelepiped implements GameObject, Physical {
             occludedCubes[i] = false;
         }
 
-//        cubes = occludedCubes;
+//        cubes = occludedCubes.clone();
 
 //
         System.out.println("convolution: " + (System.currentTimeMillis() - start));
@@ -115,7 +179,7 @@ public class VirtualParallelepiped implements GameObject, Physical {
                     int testSize = 0;
                     int usefulSize = 0;
                     check:
-                    while (true) {
+                    for (int e = 0; e < Math.floor(3d / RESOLUTION); e++) {
                         if (x + testSize >= width || y + testSize >= height || z + testSize >= length) break;
                         boolean useful = false;
                         //pretend size is 1 more than it is, then if that's fine, move on, if it's not, leave
@@ -174,7 +238,7 @@ public class VirtualParallelepiped implements GameObject, Physical {
                             }
 //                        }
 
-                        shulkers.add(new Vector4d(min.x + x * RESOLUTION + usefulSize * RESOLUTION / 2d - RESOLUTION / 2d, min.y + y * RESOLUTION - RESOLUTION / 2d, min.z + z * RESOLUTION + usefulSize * RESOLUTION / 2d - RESOLUTION / 2d, usefulSize * RESOLUTION));
+                        shulkers.add(new Vector4d(min.x + x * RESOLUTION + usefulSize * RESOLUTION / 2d, min.y + y * RESOLUTION, min.z + z * RESOLUTION + usefulSize * RESOLUTION / 2d, usefulSize * RESOLUTION));
                     }
                 }
             }

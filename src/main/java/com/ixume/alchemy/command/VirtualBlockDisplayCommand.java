@@ -25,6 +25,8 @@ public class VirtualBlockDisplayCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) return false;
 
+        if (args.length < 1) return false;
+
         World world = player.getWorld();
         if (!world.getEntities().isEmpty()) {
             BlockDisplay c = null;
@@ -38,7 +40,7 @@ public class VirtualBlockDisplayCommand implements CommandExecutor {
             }
 
             if (c != null) {
-                TickersManager.getInstance().tickers.get(player.getWorld().getName()).addObject(new VirtualParallelepiped(c.getLocation().toVector().toVector3d(), c.getTransformation(), world));
+                TickersManager.getInstance().tickers.get(player.getWorld().getName()).addObject(new VirtualParallelepiped(c.getLocation().toVector().toVector3d(), c.getTransformation(), world, args[0].equals("b")));
             }
         }
 

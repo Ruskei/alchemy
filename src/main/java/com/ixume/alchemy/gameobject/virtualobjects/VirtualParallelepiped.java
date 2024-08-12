@@ -18,8 +18,9 @@ import java.util.List;
 public class VirtualParallelepiped implements GameObject, Physical {
     private static final double RESOLUTION = 0.5;
     private final DisplayHitbox hitbox;
-    private long[] cubes;
     private final World world;
+    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(0, 255, 0), 0.4F);
+    private long[] cubes;
 
     public VirtualParallelepiped(Vector3d origin, Transformation transformation, World world) {
         this.world = world;
@@ -40,22 +41,24 @@ public class VirtualParallelepiped implements GameObject, Physical {
         int width = (int) ((max.x - min.x) / RESOLUTION);
         int length = (int) ((max.z - min.z) / RESOLUTION);
         int height = (int) ((max.y - min.y) / RESOLUTION);
+        int a = 0;
 
         if (cubes != null) {
-                for (int z = 0; z < length; z++) {
-                    for (int x = 0; x < width; x++) {
-                        for (int y = 0; y < height; y++) {
-                            if (((cubes[x + (z * width)] >> y) & 1) == 1) {
-                                Vector3d p = new Vector3d(min.x + x * RESOLUTION + RESOLUTION / 2d, min.y + y * RESOLUTION + RESOLUTION / 2d, min.z + z * RESOLUTION + RESOLUTION / 2d);
-                                world.spawnParticle(Particle.DUST, new Location(world, p.x, p.y, p.z), 1, edgeDust);
-                            }
+            for (int z = 0; z < length; z++) {
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        if (((cubes[x + (z * width)] >> y) & 1) == 1) {
+                            a++;
+                            Vector3d p = new Vector3d(min.x + x * RESOLUTION + RESOLUTION / 2d, min.y + y * RESOLUTION + RESOLUTION / 2d, min.z + z * RESOLUTION + RESOLUTION / 2d);
+                            world.spawnParticle(Particle.DUST, new Location(world, p.x, p.y, p.z), 1, edgeDust);
                         }
+                    }
                 }
             }
         }
-    }
 
-    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
+//        System.out.println("a-tick: " + a);
+    }
 
     @Override
     public void kill() {
@@ -74,17 +77,13 @@ public class VirtualParallelepiped implements GameObject, Physical {
         if (width > 63 || length > 63 || height > 63) throw new IndexOutOfBoundsException();
 
         long[] points = new long[(width + 1) * (length + 1)];
-//        long full = 0xFFFFFFFFFFFFFFFFL;
-//        long xMask = full << (64 - width);
-//        long yMask = full << (64 - height);
-//        long zMask = full << (64 - length);
 
         //set the general positions && only choose those with potential to be cubes
         for (int z = 0; z < length + 1; z++) {
             for (int x = 0; x < width + 1; x++) {
                 int index = z * width + x;
                 for (int y = 0; y < height + 1; y++) {
-                    points[index] |= (hitbox.inInsideLong(new Vector3d(min.x + x * RESOLUTION + RESOLUTION, min.y + y * RESOLUTION, min.z + z * RESOLUTION)) << y);
+                    points[index] |= (hitbox.inInsideLong(new Vector3d(min.x + x * RESOLUTION, min.y + y * RESOLUTION, min.z + z * RESOLUTION)) << y);
                 }
 
                 points[index] &= (points[index] >> 1);
@@ -94,36 +93,134 @@ public class VirtualParallelepiped implements GameObject, Physical {
         System.out.println("write positions: " + (System.currentTimeMillis() - start));
         start = System.currentTimeMillis();
 
-        long[] cubes = new long[width * length];
+        long[] rawCubes = new long[width * length];
         //get actual cubes from positions
         for (int z = 0; z < length; z++) {
             for (int x = 0; x < width; x++) {
                 int index = z * width + x;
-                cubes[index] = points[index] & points[index + 1] & points[index + width] & points[index + width + 1];
+                rawCubes[index] = points[index] & points[index + 1] & points[index + width] & points[index + width + 1];
             }
         }
 
-        this.cubes = cubes;
+//        this.cubes = rawCubes;
 
         System.out.println("cubify: " + (System.currentTimeMillis() - start));
         start = System.currentTimeMillis();
         //cull occluded
         long[] culledCubes = new long[width * length];
+        System.arraycopy(rawCubes, 0, culledCubes, 0, culledCubes.length);
 
         for (int z = 1; z < length - 1; z++) {
             for (int x = 1; x < width - 1; x++) {
                 int index = z * width + x;
-                long column = cubes[index];
-                culledCubes[index] = column & ~(column & (column >> 1) & (column << 1) & cubes[index - 1] & cubes[index + 1] & cubes[index + width] & cubes[index - width]);
+                long column = rawCubes[index];
+                culledCubes[index] = column & ~(column & (column >> 1) & (column << 1) & rawCubes[index - 1] & rawCubes[index + 1] & rawCubes[index + width] & rawCubes[index - width]);
             }
         }
 
-        this.cubes = culledCubes;
+//        this.cubes = rawCubes.clone();
 
         System.out.println("cull occluded: " + (System.currentTimeMillis() - start));
         start = System.currentTimeMillis();
 
-        return new ArrayList<>();
+        List<Vector4d> shulkers = new ArrayList<>();
+
+        int maxSize = (int) Math.floor(3d / RESOLUTION);
+
+        for (int z = 0; z < length; z++) {
+            for (int x = 0; x < width; x++) {
+                //find max raw size for each possible cube of this column first
+                int index = z * width + x;
+                long rawColumn = rawCubes[index];
+                if (rawColumn == 0) continue;
+                //find first 1
+                int y = Long.numberOfTrailingZeros(rawColumn);
+                if (y > height) continue; //no set bits here
+                while (y <= height) {
+                    int h = Math.min(maxSize, Long.numberOfTrailingZeros(~(rawColumn >> y))); //height of possible cube
+                    if (h == 0) break;
+//                    this.cubes[index] |= (Long.MAX_VALUE >> (63 - h)) << y;
+                    //check if this index
+                    long culledColumn = culledCubes[index];
+//                    int usefulSize = (int) ((culledColumn >> y) & 1); //0 if nothing useful there, 1 if there is
+                    int size = 1; //start with 1 because starting with 0 is the same as this check ^
+                    long usefulMask = culledColumn >> y;
+                    check:
+                    while (size < h) {
+                        //spiral square check, check NEXT size to see if it's viable
+//                        int maybeUsefulSize = 0;
+                        for (int x1 = 0; x1 <= size; x1++) {
+                            int index2 = index + (size * width) + x1;
+                            long rawColumn2 = rawCubes[index2];
+                            if (rawColumn2 == 0) break check;
+                            int h2 = Long.numberOfTrailingZeros(~(rawColumn2 >> y));
+                            if (h2 <= size) break check; //wasting this testing, can't get bigger
+                            h = Math.min(h, h2);
+                            //count useful size
+                            long culledColumn2 = culledCubes[index2];
+                            usefulMask |= (((culledColumn2 >> y) & 1) << size);
+                            for (int i3 = 1; i3 <= size && ((usefulMask >> size) & 1) == 0; i3++) {
+                                usefulMask |= ((((culledColumn2 >> y) >> i3) & 1) << size);
+                            }
+
+                            usefulMask |= ((culledColumn2 >> (y + size)) << size);
+                        }
+
+                        for (int z1 = 0; z1 < size; z1++) {
+                            int index2 = index + (z1 * width) + size;
+                            long rawColumn2 = rawCubes[index2];
+                            if (rawColumn2 == 0) break check;
+                            int h2 = Long.numberOfTrailingZeros(~(rawColumn2 >> y));
+                            if (h2 <= size) break check; //wasting this testing, can't get bigger
+                            h = Math.min(h, h2);
+                            //count useful size
+                            long culledColumn2 = culledCubes[index2];
+                            usefulMask |= (((culledColumn2 >> y) & 1) << size);
+                            for (int i3 = 1; i3 <= size && ((usefulMask >> size) & 1) == 0; i3++) {
+                                usefulMask |= ((((culledColumn2 >> y) >> i3) & 1) << size);
+                            }
+
+                            usefulMask |= ((culledColumn2 >> (y + size)) << size);
+                        }
+
+                        size++;
+                    }
+
+                    usefulMask <<= (64 - size);
+                    int usefulSize = usefulMask == 0 ? 0 : size - Long.numberOfLeadingZeros(usefulMask);
+
+                    if (usefulSize == 0) continue;
+                    //clear out used cubes
+                    if (usefulSize == 1) {
+                        culledCubes[index] &= ~(1L << y);
+                    }
+
+                    if (usefulSize > 1) {
+                        long mask = ~((Long.MAX_VALUE >> (63 - usefulSize)) << y);
+
+                        for (int x1 = 0; x1 < usefulSize; x1++) {
+                            for (int z1 = 0; z1 < usefulSize; z1++) {
+                                int index2 = index + (z1 * width) + x1;
+                                culledCubes[index2] &= mask;
+                            }
+                        }
+                    }
+
+                    shulkers.add(new Vector4d(min.x + x * RESOLUTION + usefulSize * RESOLUTION / 2d, min.y + y * RESOLUTION, min.z + z * RESOLUTION + usefulSize * RESOLUTION / 2d, usefulSize * RESOLUTION));
+
+                    y++;
+                }
+            }
+        }
+
+        System.out.println("greedy meshing: " + (System.currentTimeMillis() - start));
+        System.out.println("size: " + shulkers.size());
+
+        this.cubes = culledCubes;
+
+//        this.cubes = rawCubes;
+
+        return shulkers;
     }
 
     private List<Vector4d> naiveCubify() {
@@ -227,15 +324,15 @@ public class VirtualParallelepiped implements GameObject, Physical {
                     if (usefulSize > 0) {
                         //hollow out the cube
 //                        if (usefulSize > 1) {
-                            for (int y1 = y; y1 < y + usefulSize; y1++) {
-                                for (int z1 = z; z1 < z + usefulSize; z1++) {
-                                    for (int x1 = x; x1 < x + usefulSize; x1++) {
-                                        int index2 = x1 + (z1 * width) + (y1 * width * length);
+                        for (int y1 = y; y1 < y + usefulSize; y1++) {
+                            for (int z1 = z; z1 < z + usefulSize; z1++) {
+                                for (int x1 = x; x1 < x + usefulSize; x1++) {
+                                    int index2 = x1 + (z1 * width) + (y1 * width * length);
 //                                        rawCubes[index2] = false;
-                                        occludedCubes[index2] = false;
-                                    }
+                                    occludedCubes[index2] = false;
                                 }
                             }
+                        }
 //                        }
 
                         shulkers.add(new Vector4d(min.x + x * RESOLUTION + usefulSize * RESOLUTION / 2d, min.y + y * RESOLUTION, min.z + z * RESOLUTION + usefulSize * RESOLUTION / 2d, usefulSize * RESOLUTION));
@@ -244,7 +341,7 @@ public class VirtualParallelepiped implements GameObject, Physical {
             }
         }
 
-        System.out.println(shulkers.size());
+        System.out.println("size: " + shulkers.size());
         System.out.println("finish: " + (System.currentTimeMillis() - start));
 
         return shulkers;
@@ -285,12 +382,12 @@ public class VirtualParallelepiped implements GameObject, Physical {
     }
 
     private boolean convolute(int x, int y, int z, int width, int length, boolean[] positions) {
-        return positions[(x+1) + (z * width) + (y * width * length)] &&
-                positions[(x-1) + (z * width) + (y * width * length)] &&
-                positions[x + ((z+1) * width) + (y * width * length)] &&
-                positions[x + ((z-1) * width) + (y * width * length)] &&
-                positions[x + (z * width) + ((y+1) * width * length)] &&
-                positions[x + (z * width) + ((y-1) * width * length)];
+        return positions[(x + 1) + (z * width) + (y * width * length)] &&
+                positions[(x - 1) + (z * width) + (y * width * length)] &&
+                positions[x + ((z + 1) * width) + (y * width * length)] &&
+                positions[x + ((z - 1) * width) + (y * width * length)] &&
+                positions[x + (z * width) + ((y + 1) * width * length)] &&
+                positions[x + (z * width) + ((y - 1) * width * length)];
     }
 
     @Override

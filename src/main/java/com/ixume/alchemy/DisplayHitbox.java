@@ -36,6 +36,8 @@ public class DisplayHitbox implements GameObject, Hitbox {
 
         DisplayTransformation displayTransformation = new DisplayTransformation(transformation);
         Matrix4f finalMatrix = displayTransformation.getMatrix();
+        System.out.println(origin);
+        System.out.println(finalMatrix);
         vertices = vertices.stream().map(k -> finalMatrix.transform(new Vector4f((float) k.x, (float) k.y, (float) k.z, 1f))).map(k -> new Vector3d(origin.x + k.x, origin.y + k.y, origin.z + k.z)).toList();
         inverse = new Matrix4f(finalMatrix).invert();
         fragments.add(new ParallelogramHitboxFragment(vertices.get(0), new Vector3d(vertices.get(1)).sub(vertices.get(0)), new Vector3d(vertices.get(3)).sub(vertices.get(0)), world));
@@ -59,6 +61,8 @@ public class DisplayHitbox implements GameObject, Hitbox {
         vertices.add(new Vector3d(1, 1, 0));
         vertices.add(new Vector3d(1, 1, 1));
         vertices.add(new Vector3d(0, 1, 1));
+
+        System.out.println(matrix);
 
         vertices = vertices.stream().map(k -> matrix.transform(new Vector4f((float) k.x, (float) k.y, (float) k.z, 1f))).map(k -> new Vector3d(origin.x + k.x, origin.y + k.y, origin.z + k.z)).toList();
 

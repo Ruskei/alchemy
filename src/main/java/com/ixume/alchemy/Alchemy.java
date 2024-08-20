@@ -5,6 +5,7 @@ import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.listener.PlayerInteractListener;
 import com.ixume.alchemy.listener.PlayerJoinListener;
+import com.ixume.alchemy.listener.PlayerLeaveListener;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,6 +24,7 @@ public final class Alchemy extends JavaPlugin {
         INSTANCE = this;
         PlayerInteractListener.init(this);
         PlayerJoinListener.init(this);
+        PlayerLeaveListener.init(this);
 
         VirtualBlockDisplayCommand.init(this);
 

@@ -55,13 +55,28 @@ public class ProximityList {
         PlayerRegion region = entry.getValue();
         Vector3i mapVector = region.getKeyVector();
         Vector3i currentVector = getKeyFromRaw(player.getLocation().toVector().toVector3d());
+        ServerPlayer serverPlayer = ((CraftPlayer) player).getHandle();
+        ServerGamePacketListenerImpl connection = serverPlayer.connection;
         if (mapVector.equals(currentVector)) {
             //player hasn't moved from their chunk
+            //update from those chunks
+            List<Chunk> updatedChunks = getChunksInVolume(player.getLocation().toVector().toVector3d());
+            Set<VirtualShulker> currentEntities = getShulkersFromChunks(updatedChunks);
+            Set<VirtualShulker> entitiesToAdd = new HashSet<>(currentEntities);
+            entitiesToAdd.removeAll(region.getShulkers());
+            Set<VirtualShulker> entitiesToRemove = new HashSet<>(region.getShulkers());
+            entitiesToRemove.removeAll(currentEntities);
+
+            removeShulkers(entitiesToRemove, connection);
+            sendShulkers(entitiesToAdd, connection);
+
+            playerPositionsMap.get(entry.getKey()).setShulkers(currentEntities);
+            playerPositionsMap.get(entry.getKey()).setChunks(updatedChunks);
+            playerPositionsMap.get(entry.getKey()).setKeyVector(currentVector);
         } else {
             //remove entities from old chunks and add entities to new chunks
             Set<Chunk> oldChunks = new HashSet<>(region.getChunks());
             List<Chunk> newChunks = getChunksInVolume(player.getLocation().toVector().toVector3d());
-            Set<VirtualShulker> entitiesToAdd = new HashSet<>();
             Set<VirtualShulker> currentEntities = getShulkersFromChunks(newChunks);
 //            System.out.println("newChunks.size: " + newChunks.size());
 //            System.out.println("chunkmap.size: " + chunkMap.size());
@@ -69,9 +84,6 @@ public class ProximityList {
             chunksToRemove.removeAll(newChunks);
             List<Chunk> chunksToAdd = new ArrayList<>(newChunks);
             chunksToAdd.removeAll(oldChunks);
-
-            ServerPlayer serverPlayer = ((CraftPlayer) player).getHandle();
-            ServerGamePacketListenerImpl connection = serverPlayer.connection;
 
             Set<VirtualShulker> entitiesToRemove = new HashSet<>();
 
@@ -81,23 +93,12 @@ public class ProximityList {
             }
 
             entitiesToRemove.removeAll(currentEntities);
-            int[] integers = new int[entitiesToRemove.size() * 2];
-            int i = 0;
-            for (VirtualShulker shulker : entitiesToRemove) {
-                integers[i * 2] = shulker.getArmorstand();
-                integers[i * 2 + 1] = shulker.getShulkerbox();
-                i++;
-            }
+            removeShulkers(entitiesToRemove, connection);
 
-            ClientboundRemoveEntitiesPacket removePacket = new ClientboundRemoveEntitiesPacket(integers);
-            connection.send(removePacket);
-
-            for (Chunk chunkToAdd : chunksToAdd) {
-                entitiesToAdd.addAll(chunkToAdd.colliders.values());
-            }
+            Set<VirtualShulker> entitiesToAdd = new HashSet<>(getShulkersFromChunks(chunksToAdd));
 
             entitiesToAdd.removeAll(region.getShulkers());
-            entitiesToAdd.forEach(v -> connection.sendPacket(v.getPacket()));
+            sendShulkers(entitiesToAdd, connection);
 
             playerPositionsMap.get(entry.getKey()).setShulkers(currentEntities);
             playerPositionsMap.get(entry.getKey()).setChunks(newChunks);
@@ -127,6 +128,22 @@ public class ProximityList {
         }
 
         return shulkers;
+    }
+
+    private void sendShulkers(Collection<VirtualShulker> shulkers, ServerGamePacketListenerImpl connection) {
+        shulkers.forEach(v -> connection.send(v.getPacket()));
+    }
+
+    private void removeShulkers(Collection<VirtualShulker> shulkers, ServerGamePacketListenerImpl connection) {
+        int[] integers = new int[shulkers.size() * 2];
+        int i = 0;
+        for (VirtualShulker shulker : shulkers) {
+            integers[i * 2] = shulker.getArmorstand();
+            integers[i * 2 + 1] = shulker.getShulkerbox();
+            i++;
+        }
+
+        connection.send(new ClientboundRemoveEntitiesPacket(integers));
     }
 
     public void registerPlayer(Player player) {

@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VirtualParallelepiped implements GameObject, Physical {
-    private static final double RESOLUTION = 0.25;
+    private static final double RESOLUTION = 0.1;
     private final DisplayHitbox hitbox;
     private final World world;
     private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(0, 255, 0), 0.4F);

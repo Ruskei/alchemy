@@ -25,10 +25,11 @@ public class PlayerJoinListener implements Listener {
         Player player = joinEvent.getPlayer();
         GameObjectTicker relevantTicker = TickersManager.getInstance().tickers.get(player.getWorld().getName());
         if (relevantTicker != null) {
-            Vector3d playerVector = relevantTicker.proximityList.getKeyFromRaw(player.getLocation().toVector().toVector3d());
-            if (relevantTicker.proximityList.chunkMap.containsKey(playerVector)) {
-                relevantTicker.getProximityList().playerChunkMap.put(player.getEntityId(), relevantTicker.proximityList.chunkMap.get(playerVector));
-            }
+            relevantTicker.registerPlayer(player);
+//            Vector3d playerVector = relevantTicker.proximityList.getKeyFromRaw(player.getLocation().toVector().toVector3d());
+//            if (relevantTicker.proximityList.chunkMap.containsKey(playerVector)) {
+//                relevantTicker.getProximityList().playerChunkMap.put(player.getEntityId(), relevantTicker.proximityList.chunkMap.get(playerVector));
+//            }
         }
     }
 }

@@ -19,18 +19,19 @@ import org.joml.Vector3d;
 import org.joml.Vector4d;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GameObjectTicker {
-    private volatile int time;
-    private volatile List<GameObject> objects;
-    private volatile List<GameObject> objectsToAdd;
-    private volatile List<GameObject> objectsToRemove;
-    public volatile ProximityList proximityList;
+    private final AtomicInteger time;
+    private final List<GameObject> objects;
+    private final List<GameObject> objectsToAdd;
+    private final List<GameObject> objectsToRemove;
+    public final ProximityList proximityList;
     private final World world;
 
     public GameObjectTicker(Alchemy plugin, World world) {
         this.world = world;
-        time = 0;
+        time = new AtomicInteger(0);
         objects = new ArrayList<>();
         objectsToAdd = new ArrayList<>();
         objectsToRemove = new ArrayList<>();
@@ -62,72 +63,76 @@ public class GameObjectTicker {
         this.objects.addAll(this.objectsToAdd);
         this.objectsToAdd.clear();
 
-        if (time % 2 == 0) {
-            for (Player p : world.getPlayers()) {
-                ServerPlayer serverPlayer = ((CraftPlayer) p).getHandle();
-                Vector3d playerVector = proximityList.getKeyFromRaw(p.getLocation().toVector().toVector3d());
-                if (proximityList.chunkMap.containsKey(playerVector)) {
-                    Chunk playerChunk = proximityList.chunkMap.get(playerVector);
-
-                    if (proximityList.playerChunkMap.containsKey(p.getEntityId())) {
-                        Chunk outdatedChunk = this.proximityList.playerChunkMap.get(p.getEntityId());
-                        if (playerChunk.equals(proximityList.playerChunkMap.get(p.getEntityId()))) {
-                            //player hasn't moved
-                            sendStands(playerChunk.collidersToAdd, serverPlayer.connection);
-                        } else {
-                            System.out.println("realized -> realized");
-                            //player has moved chunks
-                            //playerChunk is current, the one in the list is outdated
-                            //delete all the previous entities
-//                            if (this..proximityList.playerChunkMap.containsKey(p.getEntityId())) {
-                            List<Pair<Integer, Integer>> toRemove = new ArrayList<>();
-                            for (Map.Entry<Vector4d, VirtualShulker> entry : outdatedChunk.colliders.entrySet()) {
-                                if (!playerChunk.colliders.containsKey(entry.getKey())) {
-                                    toRemove.add(Pair.of(entry.getValue().getArmorstand(), entry.getValue().getShulkerbox()));
-                                }
-                            }
-
-                            System.out.println("toRemove.size: " + toRemove.size());
-
-                            serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(toRemove.stream().mapToInt(Pair::left).toArray()));
-                            serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(toRemove.stream().mapToInt(Pair::right).toArray()));
+//        if (time.intValue() % 2 == 0) {
+//            for (Player p : world.getPlayers()) {
+//                ServerPlayer serverPlayer = ((CraftPlayer) p).getHandle();
+//                Vector3d playerVector = proximityList.getKeyFromRaw(p.getLocation().toVector().toVector3d());
+//                if (proximityList.chunkMap.containsKey(playerVector)) {
+//                    Chunk playerChunk = proximityList.chunkMap.get(playerVector);
+//
+//                    if (proximityList.playerChunkMap.containsKey(p.getEntityId())) {
+//                        Chunk outdatedChunk = this.proximityList.playerChunkMap.get(p.getEntityId());
+//                        if (playerChunk.equals(proximityList.playerChunkMap.get(p.getEntityId()))) {
+//                            //player hasn't moved
+//                            sendStands(playerChunk.collidersToAdd, serverPlayer.connection);
+//                        } else {
+//                            System.out.println("realized -> realized");
+//                            //player has moved chunks
+//                            //playerChunk is current, the one in the list is outdated
+//                            //delete all the previous entities
+////                            if (this..proximityList.playerChunkMap.containsKey(p.getEntityId())) {
+//                            List<Pair<Integer, Integer>> toRemove = new ArrayList<>();
+//                            for (Map.Entry<Vector4d, VirtualShulker> entry : outdatedChunk.colliders.entrySet()) {
+//                                if (!playerChunk.colliders.containsKey(entry.getKey())) {
+//                                    toRemove.add(Pair.of(entry.getValue().getArmorstand(), entry.getValue().getShulkerbox()));
+//                                }
 //                            }
-
-                            //send new ones
-                            List<VirtualShulker> toUpdate = new ArrayList<>();
-                            for (Map.Entry<Vector4d, VirtualShulker> entry : playerChunk.colliders.entrySet()) {
-                                if (!outdatedChunk.colliders.containsKey(entry.getKey())) {
-                                    toUpdate.add(entry.getValue());
-                                }
-                            }
-
-                            System.out.println("toUpdate.size: " + toUpdate.size());
-
-                            sendStands(toUpdate, serverPlayer.connection);
-
-                            //update
-                            proximityList.playerChunkMap.replace(p.getEntityId(), playerChunk);
-                        }
-                    } else {
-                        //moved from null chunk to realized chunk
-                        System.out.println("null -> realized");
-                        sendStands(playerChunk.colliders, serverPlayer.connection);
-
-                        proximityList.playerChunkMap.put(p.getEntityId(), playerChunk);
-                    }
-                } else if (proximityList.playerChunkMap.containsKey(p.getEntityId())) {
-                    System.out.println("realized -> null");
-                    Chunk outdatedChunk = this.proximityList.playerChunkMap.get(p.getEntityId());
-                    serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(outdatedChunk.colliders.values().stream().mapToInt(VirtualShulker::getArmorstand).toArray()));
-                    serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(outdatedChunk.colliders.values().stream().mapToInt(VirtualShulker::getShulkerbox).toArray()));
-                    proximityList.playerChunkMap.remove(p.getEntityId());
-                }
-            }
-        }
+//
+//                            System.out.println("toRemove.size: " + toRemove.size());
+//
+//                            serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(toRemove.stream().mapToInt(Pair::left).toArray()));
+//                            serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(toRemove.stream().mapToInt(Pair::right).toArray()));
+////                            }
+//
+//                            //send new ones
+//                            List<VirtualShulker> toUpdate = new ArrayList<>();
+//                            for (Map.Entry<Vector4d, VirtualShulker> entry : playerChunk.colliders.entrySet()) {
+//                                if (!outdatedChunk.colliders.containsKey(entry.getKey())) {
+//                                    toUpdate.add(entry.getValue());
+//                                }
+//                            }
+//
+//                            System.out.println("toUpdate.size: " + toUpdate.size());
+//
+//                            sendStands(toUpdate, serverPlayer.connection);
+//
+//                            //update
+//                            proximityList.playerChunkMap.replace(p.getEntityId(), playerChunk);
+//                        }
+//                    } else {
+//                        //moved from null chunk to realized chunk
+//                        System.out.println("null -> realized");
+//                        sendStands(playerChunk.colliders, serverPlayer.connection);
+//
+//                        proximityList.playerChunkMap.put(p.getEntityId(), playerChunk);
+//                    }
+//                } else if (proximityList.playerChunkMap.containsKey(p.getEntityId())) {
+//                    System.out.println("realized -> null");
+//                    Chunk outdatedChunk = this.proximityList.playerChunkMap.get(p.getEntityId());
+//                    serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(outdatedChunk.colliders.values().stream().mapToInt(VirtualShulker::getArmorstand).toArray()));
+//                    serverPlayer.connection.send(new ClientboundRemoveEntitiesPacket(outdatedChunk.colliders.values().stream().mapToInt(VirtualShulker::getShulkerbox).toArray()));
+//                    proximityList.playerChunkMap.remove(p.getEntityId());
+//                }
+//            }
+//        }
 
         proximityList.tick();
 
-        time++;
+        time.addAndGet(1);
+    }
+
+    public void registerPlayer(Player player) {
+        proximityList.registerPlayer(player);
     }
 
     private void sendStands(Map<Vector4d, VirtualShulker> map, ServerGamePacketListenerImpl connection) {

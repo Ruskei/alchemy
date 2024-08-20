@@ -18,7 +18,7 @@ public class DisplayTransformation {
         Matrix4f rightMatrix = new Matrix4f();
         rightRotation.get(rightMatrix);
         matrix.identity();
-        matrix = matrix.translate(translation).mul(rightMatrix).scale(scale).mul(leftMatrix);
+        matrix = matrix.translate(translation).mul(rightMatrix).mul(leftMatrix).scale(scale);
         return matrix;
     }
 
@@ -33,7 +33,7 @@ public class DisplayTransformation {
         Matrix4f rightMatrix = new Matrix4f();
         rightRotation.get(rightMatrix);
         matrix.identity();
-        matrix = matrix.mul(rightMatrix).scale(scale).mul(leftMatrix).translate(translation);
+        matrix = matrix.mul(rightMatrix).mul(leftMatrix).translate(translation).scale(scale);
     }
 
     public DisplayTransformation() {
@@ -46,6 +46,6 @@ public class DisplayTransformation {
         leftRotation.get(leftMatrix);
         Matrix4f rightMatrix = new Matrix4f();
         rightRotation.get(rightMatrix);
-        matrix = matrix.mul(rightMatrix).scale(scale).mul(leftMatrix).translate(translation);
+        matrix = matrix.mul(rightMatrix).mul(leftMatrix).translate(translation).scale(scale);
     }
 }

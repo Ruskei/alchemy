@@ -25,7 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ProximityList {
     private final static double CHUNK_SIZE = 3d;
-    private final static int CHUNK_VISIBILITY_DISTANCE = 2;
+    private final static int CHUNK_VISIBILITY_DISTANCE = 1;
     public final Map<Vector3i, Chunk> chunkMap;
     public final Map<UUID, PlayerRegion> playerPositionsMap;
     private final List<Chunk> toUpdate;
@@ -54,6 +54,7 @@ public class ProximityList {
         Player player = Bukkit.getPlayer(entry.getKey());
         PlayerRegion region = entry.getValue();
         Vector3i mapVector = region.getKeyVector();
+        assert player != null;
         Vector3i currentVector = getKeyFromRaw(player.getLocation().toVector().toVector3d());
         ServerPlayer serverPlayer = ((CraftPlayer) player).getHandle();
         ServerGamePacketListenerImpl connection = serverPlayer.connection;
@@ -78,8 +79,6 @@ public class ProximityList {
             Set<Chunk> oldChunks = new HashSet<>(region.getChunks());
             List<Chunk> newChunks = getChunksInVolume(player.getLocation().toVector().toVector3d());
             Set<VirtualShulker> currentEntities = getShulkersFromChunks(newChunks);
-//            System.out.println("newChunks.size: " + newChunks.size());
-//            System.out.println("chunkmap.size: " + chunkMap.size());
             List<Chunk> chunksToRemove = new ArrayList<>(oldChunks);
             chunksToRemove.removeAll(newChunks);
             List<Chunk> chunksToAdd = new ArrayList<>(newChunks);
@@ -89,7 +88,6 @@ public class ProximityList {
 
             for (Chunk chunkToRemove : chunksToRemove) {
                 entitiesToRemove.addAll(chunkToRemove.colliders.values());
-                entitiesToRemove.addAll(chunkToRemove.collidersToRemove.values());
             }
 
             entitiesToRemove.removeAll(currentEntities);
@@ -171,6 +169,24 @@ public class ProximityList {
         }
     }
 
+    public void remove(Vector4d toRemove) {
+        Vector3i key = getKeyFromRaw(new Vector3d(toRemove.x, toRemove.y, toRemove.z));
+
+        double chunkSpace = Math.ceil(toRemove.w / CHUNK_SIZE) - 1;
+        for (int x = (int) (key.x - chunkSpace); x <= (key.x + chunkSpace); x++) {
+            for (int y = (int) (key.y - chunkSpace); y <= (key.y + chunkSpace); y++) {
+                for (int z = (int) (key.z - chunkSpace); z <= (key.z + chunkSpace); z++) {
+                    Vector3i key2 = new Vector3i(x, y, z);
+                    if (chunkMap.containsKey(key2)) {
+                        chunkMap.get(key2).collidersToRemove.add(toRemove);
+                    }
+
+                    toUpdate.add(chunkMap.get(key2));
+                }
+            }
+        }
+    }
+
     public void addAll(List<Vector4d> toAdds) {
         toAdds.forEach(this::add);
     }
@@ -194,9 +210,9 @@ public class ProximityList {
         Collection<Packet<? super ClientGamePacketListener>> packets = new ArrayList<>();
         packets.add(stand.getAddEntityPacket());
         packets.add(shulker.getAddEntityPacket());
-        packets.add(new ClientboundSetEntityDataPacket(stand.getId(), stand.getEntityData().packAll()));
+        packets.add(new ClientboundSetEntityDataPacket(stand.getId(), Objects.requireNonNull(stand.getEntityData().packAll())));
         packets.add(new ClientboundSetPassengersPacket(stand));
-        packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), shulker.getEntityData().packAll()));
+        packets.add(new ClientboundSetEntityDataPacket(shulker.getId(), Objects.requireNonNull(shulker.getEntityData().packAll())));
         packets.add(new ClientboundUpdateAttributesPacket(shulker.getId(), shulker.getAttributes().getSyncableAttributes()));
         return new VirtualShulker(new ClientboundBundlePacket(packets), aID, sID);
     }

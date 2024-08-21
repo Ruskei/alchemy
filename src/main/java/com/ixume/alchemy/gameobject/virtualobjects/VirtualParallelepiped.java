@@ -9,6 +9,7 @@ import com.ixume.alchemy.gameobject.physical.Physical;
 import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.*;
 import org.bukkit.util.Transformation;
+import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector4d;
 
@@ -22,6 +23,21 @@ public class VirtualParallelepiped implements GameObject, Physical {
     private List<Vector4d> shulkers;
 
     public VirtualParallelepiped(Vector3d origin, Transformation transformation, World world, boolean binary) {
+        hitbox = new DisplayHitbox(origin, transformation, world);
+
+        myTicker = TickersManager.getInstance().tickers.get(world.getName());
+        if (myTicker != null) {
+            if (binary) {
+                Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), () -> TickersManager.getInstance().tickers.get("world").proximityList.addAll(binaryCubify()));
+            } else {
+                Bukkit.getScheduler().runTaskAsynchronously(Alchemy.getInstance(), () -> TickersManager.getInstance().tickers.get("world").proximityList.addAll(naiveCubify()));
+            }
+        } else {
+            throw new NullPointerException();
+        }
+    }
+
+    public VirtualParallelepiped(Vector3d origin, Matrix4f transformation, World world, boolean binary) {
         hitbox = new DisplayHitbox(origin, transformation, world);
 
         myTicker = TickersManager.getInstance().tickers.get(world.getName());
@@ -51,10 +67,13 @@ public class VirtualParallelepiped implements GameObject, Physical {
         Pair<Vector3d, Vector3d> boundingBox = hitbox.getBoundingBox();
         Vector3d min = boundingBox.left();
         Vector3d max = boundingBox.right();
-        RESOLUTION = Math.min(Math.max((max.y - min.y) / 64d, 0.1d), 0.5);
-        final int width = (int) Math.floor((max.x - min.x) / RESOLUTION);
-        final int length = (int) Math.floor((max.z - min.z) / RESOLUTION);
-        final int height = (int) Math.floor((max.y - min.y) / RESOLUTION);
+        final double xDiff = max.x - min.x;
+        final double yDiff = max.y - min.y;
+        final double zDiff = max.z - min.z;
+        RESOLUTION = Math.min(Math.max(Math.max(Math.max(xDiff, yDiff), zDiff) / 63d, 0.1d), 0.5);
+        final int width = (int) Math.floor(xDiff / RESOLUTION);
+        final int length = (int) Math.floor(zDiff / RESOLUTION);
+        final int height = (int) Math.floor(yDiff / RESOLUTION);
         if (height > 63) throw new IndexOutOfBoundsException();
 
         long[] points = new long[(width + 1) * (length + 1)];

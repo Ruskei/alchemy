@@ -149,12 +149,12 @@ public class ProximityList {
     }
 
     public void add(Vector4d toAdd) {
-        Vector3i key = getKeyFromRaw(new Vector3d(toAdd.x, toAdd.y, toAdd.z));
+        final Vector3i key = getKeyFromRaw(new Vector3d(toAdd.x, toAdd.y, toAdd.z));
 
-        int aID = EntityIDManager.getInstance().getID();
-        int sID = EntityIDManager.getInstance().getID();
+        final int aID = EntityIDManager.getInstance().getID();
+        final int sID = EntityIDManager.getInstance().getID();
         VirtualShulker shulker = createShulker(toAdd, aID, sID);
-        double chunkSpace = Math.ceil(toAdd.w / CHUNK_SIZE) - 1;
+        final double chunkSpace = Math.ceil(toAdd.w / CHUNK_SIZE) - 1;
         for (int x = (int) (key.x - chunkSpace); x <= (key.x + chunkSpace); x++) {
             for (int y = (int) (key.y - chunkSpace); y <= (key.y + chunkSpace); y++) {
                 for (int z = (int) (key.z - chunkSpace); z <= (key.z + chunkSpace); z++) {
@@ -170,9 +170,9 @@ public class ProximityList {
     }
 
     public void remove(Vector4d toRemove) {
-        Vector3i key = getKeyFromRaw(new Vector3d(toRemove.x, toRemove.y, toRemove.z));
+        final Vector3i key = getKeyFromRaw(new Vector3d(toRemove.x, toRemove.y, toRemove.z));
 
-        double chunkSpace = Math.ceil(toRemove.w / CHUNK_SIZE) - 1;
+        final double chunkSpace = Math.ceil(toRemove.w / CHUNK_SIZE) - 1;
         for (int x = (int) (key.x - chunkSpace); x <= (key.x + chunkSpace); x++) {
             for (int y = (int) (key.y - chunkSpace); y <= (key.y + chunkSpace); y++) {
                 for (int z = (int) (key.z - chunkSpace); z <= (key.z + chunkSpace); z++) {
@@ -203,7 +203,7 @@ public class ProximityList {
         shulker.setId(sID);
         shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
         shulker.setPos(v.x, v.y, v.z);
-//        shulker.setInvisible(true);
+        shulker.setInvisible(true);
         Objects.requireNonNull(shulker.getAttribute(Attributes.SCALE)).setBaseValue(v.w);
         stand.passengers = ImmutableList.of(shulker);
 

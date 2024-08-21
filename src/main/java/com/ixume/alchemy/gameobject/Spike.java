@@ -2,6 +2,7 @@ package com.ixume.alchemy.gameobject;
 
 import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.DisplayTransformation;
+import com.ixume.alchemy.gameobject.virtualobjects.VirtualParallelepiped;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import org.bukkit.*;
@@ -39,6 +40,7 @@ public class Spike implements GameObject, Hitbox {
 
     private final DisplayHitbox hitbox;
     private final Set<Integer> hitEntities;
+    private final VirtualParallelepiped physicalHitbox;
 
     public Spike(Vector3f spikeOrigin, Vector3f target, BlockData blockData, Player player) {
         hitEntities = new HashSet<>();
@@ -69,6 +71,10 @@ public class Spike implements GameObject, Hitbox {
 
         Matrix4f hitboxMatrix = new Matrix4f(this.defaultTransformationMatrix).translate(0.25f, 0, 0.25f).scale(0.5f, SPEED, 0.5f).translateLocal(0, -GROUND_PADDING, 0);
         hitbox = new DisplayHitbox(origin, hitboxMatrix, world);
+
+        float factor = (float) (progress) / (SPEED * LIFE * 2) + 0.5f;
+        float offset = (1f - factor) / 2f;
+        physicalHitbox = new VirtualParallelepiped(origin, new Matrix4f(defaultTransformationMatrix).translate(offset, SPEED * 2, (offset)).translateLocal(0f, -GROUND_PADDING, 0f).scale(0.5f,  LIFE * SPEED - SPEED * 2, 0.5f), world, true);
     }
 
     private void spawn() {
@@ -106,7 +112,7 @@ public class Spike implements GameObject, Hitbox {
             if (progress > 0) updateBlocks();
         }
 
-        if (progress > LIFE + LINGER) kill();
+//        if (progress > LIFE + LINGER) kill();
 
         progress++;
     }

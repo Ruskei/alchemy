@@ -3,6 +3,8 @@ package com.ixume.alchemy.listener;
 import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
+import com.ixume.alchemy.playerdata.PlayerData;
+import com.ixume.alchemy.playerdata.PlayerDataHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,5 +28,7 @@ public class PlayerLeaveListener implements Listener {
         if (relevantTicker != null) {
             relevantTicker.proximityList.playerPositionsMap.remove(player.getUniqueId());
         }
+
+        PlayerDataHolder.getInstance().removePlayer(player.getUniqueId());
     }
 }

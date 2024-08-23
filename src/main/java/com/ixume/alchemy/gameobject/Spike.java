@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Spike implements GameObject, Hitbox {
-    private static final int LINGER = 5;
+    private static final int LINGER = 80;
 //    private static final int LENGTH = 8;
     private static final int SPEED = 2;
     private static final int LIFE = 5;
@@ -112,7 +112,7 @@ public class Spike implements GameObject, Hitbox {
             if (progress > 0) updateBlocks();
         }
 
-//        if (progress > LIFE + LINGER) kill();
+        if (progress > LIFE + LINGER) kill();
 
         progress++;
     }
@@ -120,6 +120,7 @@ public class Spike implements GameObject, Hitbox {
     @Override
     public void kill() {
         displays.forEach(BlockDisplay::remove);
+        physicalHitbox.kill();
         ticker.removeObject(this);
     }
 

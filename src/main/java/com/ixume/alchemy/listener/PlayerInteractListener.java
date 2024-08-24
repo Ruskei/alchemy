@@ -20,6 +20,7 @@ import org.bukkit.util.Vector;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class PlayerInteractListener implements Listener {
@@ -77,23 +78,55 @@ public class PlayerInteractListener implements Listener {
 
                 PlayerDataHolder.getInstance().playerDataMap.get(player.getUniqueId()).bendingPlane = new Plane(normal, player.getEyeLocation().toVector().toVector3d());
             } else if (event.getItem().getType().equals(Material.TOTEM_OF_UNDYING)) {
-                System.out.println("clutch");
-                Player player = event.getPlayer();
-                if (!PlayerDataHolder.getInstance().playerDataMap.containsKey(player.getUniqueId())) {
-                   return;
-                }
-
-                Plane bendingPlane = PlayerDataHolder.getInstance().playerDataMap.get(player.getUniqueId()).bendingPlane;
-                if (bendingPlane == null) return;
-
-                Vector3d intersectionPoint = bendingPlane.intersectWithVector(player.getLocation().getDirection().toVector3d().mul(20), player.getEyeLocation().toVector().toVector3d());
-                if (intersectionPoint == null) {
-                   return;
-                }
-
-                player.getWorld().spawnParticle(Particle.DUST, new Location(player.getWorld(), intersectionPoint.x, intersectionPoint.y, intersectionPoint.z), 1, normalDust);
+                handleClutch(event);
             }
         }
+    }
+
+    private void handleClutch(PlayerInteractEvent event) {
+        System.out.println("clutch");
+        Player player = event.getPlayer();
+        if (!PlayerDataHolder.getInstance().playerDataMap.containsKey(player.getUniqueId())) {
+            return;
+        }
+
+        Plane bendingPlane = PlayerDataHolder.getInstance().playerDataMap.get(player.getUniqueId()).bendingPlane;
+        if (bendingPlane == null) return;
+
+        Vector3d intersectionPoint = bendingPlane.intersectWithVector(player.getLocation().getDirection().toVector3d().mul(20), player.getEyeLocation().toVector().toVector3d());
+        if (intersectionPoint == null) {
+            return;
+        }
+
+        player.getWorld().spawnParticle(Particle.DUST, new Location(player.getWorld(), intersectionPoint.x, intersectionPoint.y, intersectionPoint.z), 1, normalDust);
+
+        final double MAX_DISTANCE = 6;
+        Vector3d closestBlock = getClosestBlock(player.getWorld(), intersectionPoint, MAX_DISTANCE);
+        if (closestBlock == null) return;
+
+        System.out.println("found a closest block");
+        player.getWorld().spawnParticle(Particle.DUST, new Location(player.getWorld(), closestBlock.x, closestBlock.y, closestBlock.z), 1, normalDust);
+    }
+
+    @Nullable
+    private Vector3d getClosestBlock(World world, Vector3d target, double maxDistance) {
+        Vector3d closestBlock = null;
+        double closestDistance = Double.MAX_VALUE;
+        for (int x = (int) -Math.floor(maxDistance); x <= maxDistance; x++) {
+            for (int y = (int) -Math.floor(maxDistance); y <= maxDistance; y++) {
+                for (int z = (int) -Math.floor(maxDistance); z <= maxDistance; z++) {
+                    double distance = Math.sqrt(x * x + y * y + z * z);
+                    if (distance > closestDistance || distance > maxDistance) continue;
+                    if (world.getBlockAt(new Location(world, target.x + x, target.y + y, target.z + z)).getType().equals(Material.AIR)) continue;
+
+                    closestBlock = new Vector3d(target.x + x, target.y + y, target.z + z);
+                    closestDistance = distance;
+                    maxDistance = Math.ceil(distance);
+                }
+            }
+        }
+
+        return closestBlock;
     }
 
     private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 2F);

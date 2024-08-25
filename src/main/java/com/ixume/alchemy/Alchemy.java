@@ -3,18 +3,17 @@ package com.ixume.alchemy;
 import com.ixume.alchemy.command.VirtualBlockDisplayCommand;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
+import com.ixume.alchemy.gameobject.bending.EarthbendingDisplayImpl;
+import com.ixume.alchemy.gameobject.bending.VisualBlockDisplay;
 import com.ixume.alchemy.listener.PlayerInteractListener;
 import com.ixume.alchemy.listener.PlayerJoinListener;
 import com.ixume.alchemy.listener.PlayerLeaveListener;
-import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
-import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.entity.Display;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.joml.Vector3f;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Alchemy extends JavaPlugin {
     private static Alchemy INSTANCE;

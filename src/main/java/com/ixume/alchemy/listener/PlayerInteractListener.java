@@ -2,7 +2,7 @@ package com.ixume.alchemy.listener;
 
 import com.ixume.alchemy.Alchemy;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
-import com.ixume.alchemy.gameobject.Spike;
+import com.ixume.alchemy.gameobject.bending.Spike;
 import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.playerdata.Plane;
 import com.ixume.alchemy.playerdata.PlayerDataHolder;
@@ -106,6 +106,8 @@ public class PlayerInteractListener implements Listener {
 
         System.out.println("found a closest block");
         player.getWorld().spawnParticle(Particle.DUST, new Location(player.getWorld(), closestBlock.x, closestBlock.y, closestBlock.z), 1, normalDust);
+        GameObjectTicker relevantTicker = TickersManager.getInstance().tickers.get(player.getWorld().getName());
+        relevantTicker.addObject(new Spike(new Vector3f((float) closestBlock.x, (float) closestBlock.y, (float) closestBlock.z), new Vector3f((float) intersectionPoint.x, (float) intersectionPoint.y, (float) intersectionPoint.z), player.getWorld().getBlockData(new Location(player.getWorld(), closestBlock.x, closestBlock.y, closestBlock.z)), event.getPlayer()));
     }
 
     @Nullable

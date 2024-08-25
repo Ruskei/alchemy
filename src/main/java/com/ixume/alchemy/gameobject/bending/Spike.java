@@ -1,7 +1,10 @@
-package com.ixume.alchemy.gameobject;
+package com.ixume.alchemy.gameobject.bending;
 
 import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.DisplayTransformation;
+import com.ixume.alchemy.gameobject.GameObject;
+import com.ixume.alchemy.gameobject.GameObjectTicker;
+import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.gameobject.virtualobjects.VirtualParallelepiped;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
@@ -41,6 +44,8 @@ public class Spike implements GameObject, Hitbox {
     private final DisplayHitbox hitbox;
     private final Set<Integer> hitEntities;
     private final VirtualParallelepiped physicalHitbox;
+    
+    private final EarthbendingDisplayImpl earthbendingDisplay;
 
     public Spike(Vector3f spikeOrigin, Vector3f target, BlockData blockData, Player player) {
         hitEntities = new HashSet<>();
@@ -75,6 +80,14 @@ public class Spike implements GameObject, Hitbox {
         float factor = (float) (progress) / (SPEED * LIFE * 2) + 0.5f;
         float offset = (1f - factor) / 2f;
         physicalHitbox = new VirtualParallelepiped(origin, new Matrix4f(defaultTransformationMatrix).translate(offset, SPEED * 2, (offset)).translateLocal(0f, -GROUND_PADDING, 0f).scale(0.5f,  LIFE * SPEED - SPEED * 2, 0.5f), world, true);
+
+        List<VisualBlockDisplay> testList = new ArrayList<>();
+        testList.add(new VisualBlockDisplay(new Vector3f(0), new Matrix4f(), Material.STONE.createBlockData()));
+        testList.add(new VisualBlockDisplay(new Vector3f(0, 1, 0), new Matrix4f(), Material.STONE.createBlockData()));
+        testList.add(new VisualBlockDisplay(new Vector3f(0, 2, 0), new Matrix4f(), Material.STONE.createBlockData()));
+        testList.add(new VisualBlockDisplay(new Vector3f(0, 3, 0), new Matrix4f(), Material.STONE.createBlockData()));
+        testList.add(new VisualBlockDisplay(new Vector3f(0, 4, 0), new Matrix4f(), Material.STONE.createBlockData()));
+        earthbendingDisplay = new EarthbendingDisplayImpl(world, spikeOrigin, dir, LINGER, LIFE, testList);
     }
 
     private void spawn() {
@@ -103,18 +116,19 @@ public class Spike implements GameObject, Hitbox {
 
     @Override
     public void tick() {
-        if (progress < LIFE + 1) {
-            if (progress < LIFE) {
-                spawn();
-                hitbox.setOrigin(new Vector3d(origin).add(new Vector3d(dir).mul(progress * SPEED)));
-            }
-
-            if (progress > 0) updateBlocks();
-        }
-
-        if (progress > LIFE + LINGER) kill();
-
-        progress++;
+//        if (progress < LIFE + 1) {
+//            if (progress < LIFE) {
+//                spawn();
+//                hitbox.setOrigin(new Vector3d(origin).add(new Vector3d(dir).mul(progress * SPEED)));
+//            }
+//
+//            if (progress > 0) updateBlocks();
+//        }
+//
+//        if (progress > LIFE + LINGER) kill();
+//
+//        progress++;
+        earthbendingDisplay.tick();
     }
 
     @Override

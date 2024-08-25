@@ -9,6 +9,7 @@ import org.bukkit.util.Transformation;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.joml.Vector3i;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,11 +18,8 @@ import java.util.List;
 public class EarthbendingDisplayImpl implements GameObject {
     final static Vector3f IDENTITY = new Vector3f(0, 1f, 0);
 
-    private int LINGER;
-    private int LIFE;
-
-    private int GROUND_PADDING;
-    private int SMOOTH_OFFSET;
+    private final int LINGER;
+    private final int LIFE;
 
     private final World world;
     private final Vector3f origin;
@@ -29,12 +27,14 @@ public class EarthbendingDisplayImpl implements GameObject {
     private final float maxY;
     private final List<VisualBlockDisplay> blockDisplays;
     private final List<Pair<VisualBlockDisplay, BlockDisplay>> needyBlockDisplays;
+    private final Quaternionf rotationQuaternion;
+    private final Vector3i VISIBILITY_OFFSET;
     private int progress;
 
-    public EarthbendingDisplayImpl(World world, Vector3f origin, Vector3f dir, int linger, int life, List<VisualBlockDisplay> blockDisplays) {
+    public EarthbendingDisplayImpl(World world, Vector3f origin, Vector3f dir, int linger, int life, float smoothOffset, List<VisualBlockDisplay> blockDisplays) {
         this.world = world;
-        this.origin = origin;
         this.dir = dir.normalize();
+        this.origin = new Vector3f(origin).sub(new Vector3f(dir).mul(smoothOffset));
         progress = 0;
         LINGER = linger;
         LIFE = life;
@@ -43,14 +43,25 @@ public class EarthbendingDisplayImpl implements GameObject {
         needyBlockDisplays = new ArrayList<>();
         blockDisplays.sort(new DescendingYSort());
         maxY = blockDisplays.getFirst().origin().y;
+        rotationQuaternion = new Quaternionf().rotateTo(IDENTITY, dir);
+
+        VISIBILITY_OFFSET = findTransparentBlock(this.origin);
     }
 
-    public void setGROUND_PADDING(int GROUND_PADDING) {
-        this.GROUND_PADDING = GROUND_PADDING;
-    }
+    private static final int SEARCH_SIZE = 2;
 
-    public void setSMOOTH_OFFSET(int SMOOTH_OFFSET) {
-        this.SMOOTH_OFFSET = SMOOTH_OFFSET;
+    private Vector3i findTransparentBlock(Vector3f base) {
+        for (int x = -SEARCH_SIZE; x <= SEARCH_SIZE; x++) {
+            for (int y = -SEARCH_SIZE; y <= SEARCH_SIZE; y++) {
+                for (int z = -SEARCH_SIZE; z <= SEARCH_SIZE; z++) {
+                    if (!world.getBlockAt((int) Math.floor(base.x + x), (int) Math.floor(base.y + y), (int) Math.floor(base.z + z)).isSolid()) {
+                        return new Vector3i(x, y, z);
+                    }
+                }
+            }
+        }
+
+        return new Vector3i(0, 0, 0);
     }
 
     private void spawn() {
@@ -59,15 +70,17 @@ public class EarthbendingDisplayImpl implements GameObject {
             VisualBlockDisplay visualBlockDisplay = blockDisplays.getFirst();
             //valid block display to spawn
             //spawn w/ relative y = 0, moves to its own relativeY
-            Vector3f relativePosition = new Vector3f(visualBlockDisplay.origin().x, 0, visualBlockDisplay.origin().z).rotate(new Quaternionf().rotateTo(IDENTITY, dir));
-            BlockDisplay blockDisplay = world.spawn(new Location(world, origin.x + relativePosition.x, origin.y + relativePosition.y, origin.z + relativePosition.z), BlockDisplay.class);
+            Vector3f relativePosition = new Vector3f(visualBlockDisplay.origin().x, 0, visualBlockDisplay.origin().z).rotate(rotationQuaternion);
+            BlockDisplay blockDisplay = world.spawn(new Location(world, origin.x + relativePosition.x + VISIBILITY_OFFSET.x, origin.y + relativePosition.y + VISIBILITY_OFFSET.y, origin.z + relativePosition.z + VISIBILITY_OFFSET.z), BlockDisplay.class);
             blockDisplay.setBlock(visualBlockDisplay.displayData());
             blockDisplay.setInterpolationDuration(LIFE - 1 - progress);
             blockDisplay.setInterpolationDelay(-1);
+            blockDisplay.setTeleportDuration(LIFE - progress);
             Matrix4f rotatedMatrix = new Matrix4f(visualBlockDisplay.transformationMatrix());
             Quaternionf temp = new Quaternionf();
             temp.rotateTo(IDENTITY, dir);
             rotatedMatrix.rotate(temp);
+            rotatedMatrix.translateLocal(-VISIBILITY_OFFSET.x, -VISIBILITY_OFFSET.y, -VISIBILITY_OFFSET.z);
             blockDisplay.setTransformationMatrix(rotatedMatrix);
             needyBlockDisplays.add(Pair.of(visualBlockDisplay, blockDisplay));
             blockDisplays.removeFirst();

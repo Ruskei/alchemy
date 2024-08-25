@@ -87,7 +87,7 @@ public class Spike implements GameObject, Hitbox {
         testList.add(new VisualBlockDisplay(new Vector3f(0, 2, 0), new Matrix4f(), Material.STONE.createBlockData()));
         testList.add(new VisualBlockDisplay(new Vector3f(0, 3, 0), new Matrix4f(), Material.STONE.createBlockData()));
         testList.add(new VisualBlockDisplay(new Vector3f(0, 4, 0), new Matrix4f(), Material.STONE.createBlockData()));
-        earthbendingDisplay = new EarthbendingDisplayImpl(world, spikeOrigin, dir, LINGER, LIFE, testList);
+        earthbendingDisplay = new EarthbendingDisplayImpl(world, spikeOrigin, dir, LINGER, LIFE, 1.5f, testList);
     }
 
     private void spawn() {

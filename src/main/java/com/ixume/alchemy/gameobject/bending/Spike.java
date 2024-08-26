@@ -83,10 +83,10 @@ public class Spike implements GameObject, Hitbox {
 
         List<VisualBlockDisplay> testList = new ArrayList<>();
         testList.add(new VisualBlockDisplay(new Vector3f(0), new Matrix4f(), Material.STONE.createBlockData()));
-        testList.add(new VisualBlockDisplay(new Vector3f(0, 1, 0), new Matrix4f(), Material.STONE.createBlockData()));
-        testList.add(new VisualBlockDisplay(new Vector3f(0, 2, 0), new Matrix4f(), Material.STONE.createBlockData()));
-        testList.add(new VisualBlockDisplay(new Vector3f(0, 3, 0), new Matrix4f(), Material.STONE.createBlockData()));
-        testList.add(new VisualBlockDisplay(new Vector3f(0, 4, 0), new Matrix4f(), Material.STONE.createBlockData()));
+        testList.add(new VisualBlockDisplay(new Vector3f(0, 1, 0), new Matrix4f().translate(0.1f, 0, 0.1f).scale(0.8f, 1f, 0.8f), Material.STONE.createBlockData()));
+        testList.add(new VisualBlockDisplay(new Vector3f(0, 2, 0), new Matrix4f().translate(0.2f, 0, 0.2f).scale(0.6f, 1f, 0.6f), Material.STONE.createBlockData()));
+        testList.add(new VisualBlockDisplay(new Vector3f(0, 3, 0), new Matrix4f().translate(0.3f, 0, 0.3f).scale(0.4f, 1f, 0.4f), Material.STONE.createBlockData()));
+        testList.add(new VisualBlockDisplay(new Vector3f(0, 4, 0), new Matrix4f().translate(0.4f, 0, 0.4f).scale(0.2f, 1f, 0.2f), Material.STONE.createBlockData()));
         earthbendingDisplay = new EarthbendingDisplayImpl(world, spikeOrigin, dir, LINGER, LIFE, 1.5f, testList);
     }
 

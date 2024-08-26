@@ -1,6 +1,8 @@
 package com.ixume.alchemy.gameobject.bending;
 
 import com.ixume.alchemy.gameobject.GameObject;
+import com.ixume.alchemy.gameobject.GameObjectTicker;
+import com.ixume.alchemy.gameobject.TickersManager;
 import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -27,12 +29,15 @@ public class EarthbendingDisplayImpl implements GameObject {
     private final float maxY;
     private final List<VisualBlockDisplay> blockDisplays;
     private final List<Pair<VisualBlockDisplay, BlockDisplay>> needyBlockDisplays;
+    private final List<BlockDisplay> entities;
+    private final GameObjectTicker ticker;
     private final Quaternionf rotationQuaternion;
     private final Vector3i VISIBILITY_OFFSET;
     private int progress;
 
     public EarthbendingDisplayImpl(World world, Vector3f origin, Vector3f dir, int linger, int life, float smoothOffset, List<VisualBlockDisplay> blockDisplays) {
         this.world = world;
+        this.ticker = TickersManager.getInstance().tickers.get(world.getName());
         this.dir = dir.normalize();
         this.origin = new Vector3f(origin).sub(new Vector3f(dir).mul(smoothOffset));
         progress = 0;
@@ -42,6 +47,7 @@ public class EarthbendingDisplayImpl implements GameObject {
         this.blockDisplays = blockDisplays;
         needyBlockDisplays = new ArrayList<>();
         blockDisplays.sort(new DescendingYSort());
+        entities = new ArrayList<>();
         maxY = blockDisplays.getFirst().origin().y;
         rotationQuaternion = new Quaternionf().rotateTo(IDENTITY, dir);
 
@@ -76,14 +82,19 @@ public class EarthbendingDisplayImpl implements GameObject {
             blockDisplay.setInterpolationDuration(LIFE - 1 - progress);
             blockDisplay.setInterpolationDelay(-1);
             blockDisplay.setTeleportDuration(LIFE - progress);
+
             Matrix4f rotatedMatrix = new Matrix4f(visualBlockDisplay.transformationMatrix());
             Quaternionf temp = new Quaternionf();
             temp.rotateTo(IDENTITY, dir);
             rotatedMatrix.rotate(temp);
+            rotatedMatrix = temp.get(rotatedMatrix).mul(visualBlockDisplay.transformationMatrix());
             rotatedMatrix.translateLocal(-VISIBILITY_OFFSET.x, -VISIBILITY_OFFSET.y, -VISIBILITY_OFFSET.z);
+
             blockDisplay.setTransformationMatrix(rotatedMatrix);
             needyBlockDisplays.add(Pair.of(visualBlockDisplay, blockDisplay));
             blockDisplays.removeFirst();
+
+            entities.add(blockDisplay);
         }
     }
 
@@ -116,14 +127,17 @@ public class EarthbendingDisplayImpl implements GameObject {
             //1 extra tick for updates to update the last spawned stuff
         }
 
-        if (progress > LIFE + LINGER) kill();
+//        if (progress > LIFE + LINGER) kill();
 
         progress++;
     }
 
     @Override
     public void kill() {
-
+        for (BlockDisplay entity : entities) {
+            entity.remove();
+        }
+        ticker.removeObject(this);
     }
 }
 

@@ -27,8 +27,8 @@ import java.util.Set;
 public class Spike implements GameObject, Hitbox {
     private static final int LINGER = 80;
 //    private static final int LENGTH = 8;
-    private static final int SPEED = 2;
-    private static final int LIFE = 5;
+    private static final int SPEED = 5;
+    private static final int LIFE = 3;
     private static final int SMOOTH_OFFSET = 1;
     private static final int GROUND_PADDING = 5;
 
@@ -70,7 +70,7 @@ public class Spike implements GameObject, Hitbox {
         dir.rotate(transformation.rightRotation).rotate(transformation.leftRotation);
         dir.mul(-1);
 
-        this.origin = new Vector3d(spikeOrigin.x - dir.x * (SMOOTH_OFFSET + SPEED), spikeOrigin.y - dir.y * (SMOOTH_OFFSET + SPEED) + GROUND_PADDING, spikeOrigin.z - dir.z * (SMOOTH_OFFSET + SPEED));
+        this.origin = new Vector3d(spikeOrigin.x - dir.x * (SMOOTH_OFFSET), spikeOrigin.y - dir.y * (SMOOTH_OFFSET) + GROUND_PADDING, spikeOrigin.z - dir.z * (SMOOTH_OFFSET));
 
         defaultTransformationMatrix = transformation.getMatrix();
 
@@ -79,15 +79,19 @@ public class Spike implements GameObject, Hitbox {
 
         float factor = (float) (progress) / (SPEED * LIFE * 2) + 0.5f;
         float offset = (1f - factor) / 2f;
-        physicalHitbox = new VirtualParallelepiped(origin, new Matrix4f(defaultTransformationMatrix).translate(offset, SPEED * 2, (offset)).translateLocal(0f, -GROUND_PADDING, 0f).scale(0.5f,  LIFE * SPEED - SPEED * 2, 0.5f), world, true);
+        physicalHitbox = new VirtualParallelepiped(origin, new Matrix4f(defaultTransformationMatrix).translate(offset, 0, (offset)).translateLocal(0f, -GROUND_PADDING, 0f).scale(0.5f,  LIFE * SPEED - SPEED, 0.5f), world, true);
 
-        List<VisualBlockDisplay> testList = new ArrayList<>();
-        testList.add(new VisualBlockDisplay(new Vector3f(0), new Matrix4f(), Material.STONE.createBlockData()));
-        testList.add(new VisualBlockDisplay(new Vector3f(0, 1, 0), new Matrix4f().translate(0.1f, 0, 0.1f).scale(0.8f, 1f, 0.8f), Material.STONE.createBlockData()));
-        testList.add(new VisualBlockDisplay(new Vector3f(0, 2, 0), new Matrix4f().translate(0.2f, 0, 0.2f).scale(0.6f, 1f, 0.6f), Material.STONE.createBlockData()));
-        testList.add(new VisualBlockDisplay(new Vector3f(0, 3, 0), new Matrix4f().translate(0.3f, 0, 0.3f).scale(0.4f, 1f, 0.4f), Material.STONE.createBlockData()));
-        testList.add(new VisualBlockDisplay(new Vector3f(0, 4, 0), new Matrix4f().translate(0.4f, 0, 0.4f).scale(0.2f, 1f, 0.2f), Material.STONE.createBlockData()));
-        earthbendingDisplay = new EarthbendingDisplayImpl(world, spikeOrigin, dir, LINGER, LIFE, 1.5f, testList);
+        List<VisualBlockDisplay> blockDisplays = new ArrayList<>();
+        for (int i = 0; i < SPEED * LIFE - SPEED; i++) {
+            float sizeFactor = ((float) (SPEED * LIFE - SPEED - i) / (SPEED * LIFE - SPEED)) + 0.5f;
+            blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, i, 0), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, 0, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData));
+        }
+//        blockDisplays.add(new VisualBlockDisplay(new Vector3f(0), new Matrix4f(), Material.STONE.createBlockData()));
+//        blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, 1, 0), new Matrix4f().translate(0.1f, 0, 0.1f).scale(0.8f, 1f, 0.8f), Material.STONE.createBlockData()));
+//        blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, 2, 0), new Matrix4f().translate(0.2f, 0, 0.2f).scale(0.6f, 1f, 0.6f), Material.STONE.createBlockData()));
+//        blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, 3, 0), new Matrix4f().translate(0.3f, 0, 0.3f).scale(0.4f, 1f, 0.4f), Material.STONE.createBlockData()));
+//        blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, 4, 0), new Matrix4f().translate(0.4f, 0, 0.4f).scale(0.2f, 1f, 0.2f), Material.STONE.createBlockData()));
+        earthbendingDisplay = new EarthbendingDisplayImpl(world, spikeOrigin, dir, LINGER, LIFE, 1.5f, blockDisplays);
     }
 
     private void spawn() {
@@ -125,9 +129,9 @@ public class Spike implements GameObject, Hitbox {
 //            if (progress > 0) updateBlocks();
 //        }
 //
-//        if (progress > LIFE + LINGER) kill();
-//
-//        progress++;
+        if (progress > LIFE + LINGER) kill();
+
+        progress++;
         earthbendingDisplay.tick();
     }
 

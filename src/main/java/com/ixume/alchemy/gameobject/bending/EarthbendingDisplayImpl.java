@@ -71,7 +71,7 @@ public class EarthbendingDisplayImpl implements GameObject {
     }
 
     private void spawn() {
-        float factor = (1f - (float) (progress) / LIFE) * maxY;
+        float factor = (1f - (float) (progress + 1) / LIFE) * maxY;
         while (!blockDisplays.isEmpty() && blockDisplays.get(0).origin().y >= factor) {
             VisualBlockDisplay visualBlockDisplay = blockDisplays.getFirst();
             //valid block display to spawn
@@ -127,13 +127,14 @@ public class EarthbendingDisplayImpl implements GameObject {
             //1 extra tick for updates to update the last spawned stuff
         }
 
-//        if (progress > LIFE + LINGER) kill();
+        if (progress > LIFE + LINGER) kill();
 
         progress++;
     }
 
     @Override
     public void kill() {
+        System.out.println(entities.size());
         for (BlockDisplay entity : entities) {
             entity.remove();
         }

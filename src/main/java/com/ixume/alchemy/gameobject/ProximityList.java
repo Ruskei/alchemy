@@ -203,7 +203,7 @@ public class ProximityList {
         shulker.setId(sID);
         shulker.setVariant(Optional.of(net.minecraft.world.item.DyeColor.RED));
         shulker.setPos(v.x, v.y, v.z);
-        shulker.setInvisible(true);
+//        shulker.setInvisible(true);
         Objects.requireNonNull(shulker.getAttribute(Attributes.SCALE)).setBaseValue(v.w);
         stand.passengers = ImmutableList.of(shulker);
 

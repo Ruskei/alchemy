@@ -83,11 +83,7 @@ public class EarthbendingDisplayImpl implements GameObject {
             blockDisplay.setInterpolationDelay(-1);
             blockDisplay.setTeleportDuration(LIFE - progress);
 
-            Matrix4f rotatedMatrix = new Matrix4f(visualBlockDisplay.transformationMatrix());
-            Quaternionf temp = new Quaternionf();
-            temp.rotateTo(IDENTITY, dir);
-            rotatedMatrix.rotate(temp);
-            rotatedMatrix = temp.get(rotatedMatrix).mul(visualBlockDisplay.transformationMatrix());
+            Matrix4f rotatedMatrix = visualBlockDisplay.adjust(dir);
             rotatedMatrix.translateLocal(-VISIBILITY_OFFSET.x, -VISIBILITY_OFFSET.y, -VISIBILITY_OFFSET.z);
 
             blockDisplay.setTransformationMatrix(rotatedMatrix);

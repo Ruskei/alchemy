@@ -84,7 +84,7 @@ public class Spike implements GameObject, Hitbox {
         List<VisualBlockDisplay> blockDisplays = new ArrayList<>();
         for (int i = 0; i < SPEED * LIFE - SPEED; i++) {
             float sizeFactor = ((float) (SPEED * LIFE - SPEED - i) / (SPEED * LIFE - SPEED)) + 0.5f;
-            blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, i, 0), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, 0, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData));
+            blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, i, 0), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, 0, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData, RotatedDirectionAdjuster.getInstance()));
         }
 //        blockDisplays.add(new VisualBlockDisplay(new Vector3f(0), new Matrix4f(), Material.STONE.createBlockData()));
 //        blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, 1, 0), new Matrix4f().translate(0.1f, 0, 0.1f).scale(0.8f, 1f, 0.8f), Material.STONE.createBlockData()));

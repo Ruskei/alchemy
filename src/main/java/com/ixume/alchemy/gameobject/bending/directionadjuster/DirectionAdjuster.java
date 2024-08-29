@@ -1,4 +1,4 @@
-package com.ixume.alchemy.gameobject.bending;
+package com.ixume.alchemy.gameobject.bending.directionadjuster;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;

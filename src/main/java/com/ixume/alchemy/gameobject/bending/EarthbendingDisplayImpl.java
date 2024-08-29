@@ -18,7 +18,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class EarthbendingDisplayImpl implements GameObject {
-    final static Vector3f IDENTITY = new Vector3f(0, 1f, 0);
+    public final static Vector3f IDENTITY = new Vector3f(0, 1f, 0);
 
     private final int LINGER;
     private final int LIFE;

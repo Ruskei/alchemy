@@ -1,5 +1,6 @@
 package com.ixume.alchemy.gameobject.bending;
 
+import com.ixume.alchemy.gameobject.bending.directionadjuster.DirectionAdjuster;
 import org.bukkit.block.data.BlockData;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;

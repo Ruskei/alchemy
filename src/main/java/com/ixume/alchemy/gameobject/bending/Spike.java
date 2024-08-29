@@ -5,6 +5,7 @@ import com.ixume.alchemy.DisplayTransformation;
 import com.ixume.alchemy.gameobject.GameObject;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
+import com.ixume.alchemy.gameobject.bending.directionadjuster.RotatedDirectionAdjuster;
 import com.ixume.alchemy.gameobject.virtualobjects.VirtualParallelepiped;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;

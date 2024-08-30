@@ -40,6 +40,8 @@ public class LinearDamageHitbox implements GameObject, Hitbox {
             hitbox.setOrigin(new Vector3d(origin).add(new Vector3f(dir).mul(progress * speed)));
         }
 
+        if (progress == life + linger - 1) kill();
+
         hitbox.tick();
         progress++;
     }

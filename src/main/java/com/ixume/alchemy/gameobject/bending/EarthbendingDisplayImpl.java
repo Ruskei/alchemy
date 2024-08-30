@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+//depends on adjusted block displays but also needs their respective y values
 public class EarthbendingDisplayImpl implements GameObject {
     public final static Vector3f IDENTITY = new Vector3f(0, 1f, 0);
 
@@ -27,7 +28,6 @@ public class EarthbendingDisplayImpl implements GameObject {
     private final Vector3f origin;
     private final Vector3f dir;
     private final float maxY;
-    private final List<VisualBlockDisplay> blockDisplays;
     private final List<VisualBlockDisplay> adjustedBlockDisplays;
     private final List<Pair<VisualBlockDisplay, BlockDisplay>> needyBlockDisplays;
     private final List<BlockDisplay> entities;
@@ -36,22 +36,19 @@ public class EarthbendingDisplayImpl implements GameObject {
     private final Vector3i VISIBILITY_OFFSET;
     private int progress;
 
-    public EarthbendingDisplayImpl(World world, Vector3f origin, Vector3f dir, int linger, int life, float smoothOffset, List<VisualBlockDisplay> blockDisplays, List<VisualBlockDisplay> adjustedBlockDisplays) {
+    public EarthbendingDisplayImpl(World world, Vector3f origin, Vector3f dir, int linger, int life, float smoothOffset, List<VisualBlockDisplay> adjustedBlockDisplays) {
         this.world = world;
         this.ticker = TickersManager.getInstance().tickers.get(world.getName());
         this.dir = dir.normalize();
-//        this.origin = new Vector3f(origin).sub(new Vector3f(dir).mul(smoothOffset));
         this.origin = new Vector3f(origin);
         progress = 0;
         LINGER = linger;
         LIFE = life;
-        if (blockDisplays.isEmpty()) throw new NullPointerException("empty array!");
-        this.blockDisplays = blockDisplays;
+        if (adjustedBlockDisplays.isEmpty()) throw new NullPointerException("empty array!");
         this.adjustedBlockDisplays = adjustedBlockDisplays;
         needyBlockDisplays = new ArrayList<>();
-//        blockDisplays.sort(new DescendingYSort());
         entities = new ArrayList<>();
-        maxY = blockDisplays.getFirst().origin().y;
+        maxY = adjustedBlockDisplays.getFirst().relativeOrigin().y;
         rotationQuaternion = new Quaternionf().rotateTo(IDENTITY, dir);
 
         VISIBILITY_OFFSET = findTransparentBlock(this.origin);
@@ -75,14 +72,13 @@ public class EarthbendingDisplayImpl implements GameObject {
 
     private void spawn() {
         float factor = (1f - (float) (progress + 1) / LIFE) * maxY;
-        while (!blockDisplays.isEmpty() && blockDisplays.get(0).origin().y >= factor) {
-            VisualBlockDisplay visualBlockDisplay = blockDisplays.getFirst();
+        while (!adjustedBlockDisplays.isEmpty() && adjustedBlockDisplays.get(0).relativeOrigin().y >= factor) {
             VisualBlockDisplay adjustedBlockDisplay = adjustedBlockDisplays.getFirst();
             //valid block display to spawn
             //spawn w/ relative y = 0, moves to its own relativeY
-            Vector3f relativePosition = new Vector3f(visualBlockDisplay.origin().x, 0, visualBlockDisplay.origin().z).rotate(rotationQuaternion);
+            Vector3f relativePosition = new Vector3f(adjustedBlockDisplay.relativeOrigin().x, 0, adjustedBlockDisplay.relativeOrigin().z).rotate(rotationQuaternion);
             BlockDisplay blockDisplay = world.spawn(new Location(world, origin.x + relativePosition.x + VISIBILITY_OFFSET.x, origin.y + relativePosition.y + VISIBILITY_OFFSET.y, origin.z + relativePosition.z + VISIBILITY_OFFSET.z), BlockDisplay.class);
-            blockDisplay.setBlock(visualBlockDisplay.displayData());
+            blockDisplay.setBlock(adjustedBlockDisplay.displayData());
             blockDisplay.setInterpolationDuration(LIFE - 1 - progress);
             blockDisplay.setInterpolationDelay(-1);
             blockDisplay.setTeleportDuration(LIFE - progress);
@@ -91,8 +87,7 @@ public class EarthbendingDisplayImpl implements GameObject {
             rotatedMatrix.translateLocal(-VISIBILITY_OFFSET.x, -VISIBILITY_OFFSET.y, -VISIBILITY_OFFSET.z);
 
             blockDisplay.setTransformationMatrix(rotatedMatrix);
-            needyBlockDisplays.add(Pair.of(visualBlockDisplay, blockDisplay));
-            blockDisplays.removeFirst();
+            needyBlockDisplays.add(Pair.of(adjustedBlockDisplay, blockDisplay));
             adjustedBlockDisplays.removeFirst();
 
             entities.add(blockDisplay);
@@ -103,7 +98,7 @@ public class EarthbendingDisplayImpl implements GameObject {
         //needy block displays are from last tick
         for (Pair<VisualBlockDisplay, BlockDisplay> needyBlockDisplayPair : needyBlockDisplays) {
             Transformation transformation = needyBlockDisplayPair.right().getTransformation();
-            transformation.getTranslation().add(new Vector3f(dir).mul(needyBlockDisplayPair.left().origin().y));
+            transformation.getTranslation().add(new Vector3f(dir).mul(needyBlockDisplayPair.left().relativeOrigin().y));
             needyBlockDisplayPair.right().setInterpolationDelay(-1);
             needyBlockDisplayPair.right().setTransformation(transformation);
         }
@@ -124,7 +119,7 @@ public class EarthbendingDisplayImpl implements GameObject {
                 spawn();
             }
 
-            //1 extra tick for updates to update the last spawned stuff
+//            1 extra tick for updates to update the last spawned stuff
         }
 
         if (progress > LIFE + LINGER) kill();
@@ -144,7 +139,7 @@ public class EarthbendingDisplayImpl implements GameObject {
 class DescendingYSort implements Comparator<VisualBlockDisplay> {
     @Override
     public int compare(VisualBlockDisplay o1, VisualBlockDisplay o2) {
-        float diff = (o2.origin().y - o1.origin().y);
+        float diff = (o2.relativeOrigin().y - o1.relativeOrigin().y);
         return (diff == 0 ? 0 : (diff > 0 ? 1 : -1));
     }
 }

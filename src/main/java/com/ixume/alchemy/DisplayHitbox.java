@@ -14,7 +14,7 @@ import java.lang.Math;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DisplayHitbox implements GameObject, Hitbox {
+public class DisplayHitbox implements GameObject, Hitbox, com.ixume.alchemy.gameobject.physical.Physical {
     private final List<HitboxFragmentImpl> fragments;
     private List<Vector3d> vertices;
     private Vector3d origin;
@@ -118,40 +118,7 @@ public class DisplayHitbox implements GameObject, Hitbox {
     //Py - Xy = u * (Ay - Xy) + v * (By - Xy) + w * (Cy - Xy)
     //Pz - Xz = u * (Az - Xz) + v * (Bz - Xz) + w * (Cz - Xz)
     //use cramer's rule to find solutions
-    public boolean isInside(Vector3d P) {
-        Vector3d X = new Vector3d(vertices.get(0));
-        Vector3d A = new Vector3d(vertices.get(1));
-        Vector3d B = new Vector3d(vertices.get(3));
-        Vector3d C = new Vector3d(vertices.get(4));
-
-        double d = new Matrix3d(
-                (A.x - X.x), (A.y - X.y), (A.z - X.z),
-                (B.x - X.x), (B.y - X.y), (B.z - X.z),
-                (C.x - X.x), (C.y - X.y), (C.z - X.z)).determinant();
-        double u = new Matrix3d(
-                (P.x - X.x), (P.y - X.y), (P.z - X.z),
-                (B.x - X.x), (B.y - X.y), (B.z - X.z),
-                (C.x - X.x), (C.y - X.y), (C.z - X.z)).determinant() / d;
-        if (u < 0 || u > 1) return false;
-        double w = new Matrix3d(
-                (A.x - X.x), (A.y - X.y), (A.z - X.z),
-                (P.x - X.x), (P.y - X.y), (P.z - X.z),
-                (C.x - X.x), (C.y - X.y), (C.z - X.z)).determinant() / d;
-        if (w < 0 || w > 1) return false;
-        double v = new Matrix3d(
-                (A.x - X.x), (A.y - X.y), (A.z - X.z),
-                (B.x - X.x), (B.y - X.y), (B.z - X.z),
-                (P.x - X.x), (P.y - X.y), (P.z - X.z)).determinant() / d;
-        return !(v < 0) && !(v > 1);
-    }
-
-    public long inInsideLong(Vector3d P) {
-//        Vector3f diff = new Vector3f((float) P.x, (float) P.y, (float) P.z).sub((float) vertices.get(0).x, (float) vertices.get(0).y, (float) vertices.get(0).z);
-//        Vector4f diff4 = inverse.transformAffine(new Vector4f(diff, 1f));
-//        return
-//                diff4.x >= 0 && diff4.x <= 1 &&
-//                diff4.y >= 0 && diff4.y <= 1 &&
-//                diff4.z >= 0 && diff4.z <= 1 ? 1 : 0;
+    public long isInside(Vector3f P) {
         Vector3d X = new Vector3d(vertices.get(0));
         Vector3d A = new Vector3d(vertices.get(1));
         Vector3d B = new Vector3d(vertices.get(3));
@@ -178,12 +145,12 @@ public class DisplayHitbox implements GameObject, Hitbox {
         return !(v < 0) && !(v > 1) ? 1 : 0;
     }
 
-    public Pair<Vector3d, Vector3d> getBoundingBox() {
-        Vector3d min = new Vector3d(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
-        Vector3d max = new Vector3d(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
+    public Pair<Vector3f, Vector3f> getBoundingBox() {
+        Vector3f min = new Vector3f(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+        Vector3f max = new Vector3f(Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
         for (Vector3d vertex : vertices) {
-            min = new Vector3d(Math.min(min.x, vertex.x), Math.min(min.y, vertex.y), Math.min(min.z, vertex.z));
-            max = new Vector3d(Math.max(max.x, vertex.x), Math.max(max.y, vertex.y), Math.max(max.z, vertex.z));
+            min = new Vector3f((float) Math.min(min.x, vertex.x), (float) Math.min(min.y, vertex.y), (float) Math.min(min.z, vertex.z));
+            max = new Vector3f((float) Math.max(max.x, vertex.x), (float) Math.max(max.y, vertex.y), (float) Math.max(max.z, vertex.z));
         }
         
         return Pair.of(min, max);

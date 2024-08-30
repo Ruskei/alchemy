@@ -1,13 +1,12 @@
 package com.ixume.alchemy.gameobject.bending;
 
-import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.DisplayTransformation;
 import com.ixume.alchemy.gameobject.GameObject;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
+import com.ixume.alchemy.gameobject.bending.collision.GeneralVisualBlockCollisionHitbox;
 import com.ixume.alchemy.gameobject.bending.damage.LinearDamageHitbox;
 import com.ixume.alchemy.gameobject.bending.directionadjuster.RotatedDirectionAdjuster;
-import com.ixume.alchemy.gameobject.virtualobjects.VirtualParallelepiped;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import org.bukkit.*;
@@ -19,27 +18,22 @@ import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Spike implements GameObject, Hitbox {
     private static final int LINGER = 800;
     private static final int SPEED = 4;
     private static final int LIFE = 4;
     private static final int SMOOTH_OFFSET = 0;
-    private static final int GROUND_PADDING = 5;
+    private static final int GROUND_PADDING = 0;
 
     private int progress;
     private final GameObjectTicker ticker;
-    private final Vector3f origin;
-    private final Vector3f dir;
 
-//    private final DisplayHitbox hitbox;
     private final LinearDamageHitbox hitbox;
     private final Set<Integer> hitEntities;
-    private final VirtualParallelepiped physicalHitbox;
+    private final GeneralVisualBlockCollisionHitbox physicalHitbox;
+//    private final PhysicalHitbox physicalHitbox;
     
     private final EarthbendingDisplayImpl earthbendingDisplay;
 
@@ -60,50 +54,46 @@ public class Spike implements GameObject, Hitbox {
         v.mul(-1);
         transformation.translation.set(v);
 
-        dir = new Vector3f(0f, -1f, 0f);
+        Vector3f dir = new Vector3f(0f, -1f, 0f);
         dir.rotate(transformation.rightRotation).rotate(transformation.leftRotation);
         dir.mul(-1);
 
-        this.origin = new Vector3f(spikeOrigin.x - dir.x * (SMOOTH_OFFSET), spikeOrigin.y - dir.y * (SMOOTH_OFFSET) + GROUND_PADDING, spikeOrigin.z - dir.z * (SMOOTH_OFFSET));
+        Vector3f origin = new Vector3f(spikeOrigin.x - dir.x * (SMOOTH_OFFSET), spikeOrigin.y - dir.y * (SMOOTH_OFFSET) + GROUND_PADDING, spikeOrigin.z - dir.z * (SMOOTH_OFFSET));
 
         Matrix4f defaultTransformationMatrix = transformation.getMatrix();
 
         Matrix4f hitboxMatrix = new Matrix4f(defaultTransformationMatrix).translate(0f, 0, 0f).scale(1f, SPEED, 1f).translateLocal(0, -GROUND_PADDING, 0);
-//        hitbox = new DisplayHitbox(new Vector3d(origin.x, origin.y, origin.z), hitboxMatrix, world);
         hitbox = new LinearDamageHitbox(world, new Vector3f(origin), new Vector3f(dir), hitboxMatrix, SPEED, LIFE, LINGER);
 
         float factor = (float) (progress) / (SPEED * LIFE * 2) + 0.5f;
         float offset = (1f - factor) / 2f;
-        physicalHitbox = new VirtualParallelepiped(new Vector3d(origin.x, origin.y, origin.z), new Matrix4f(defaultTransformationMatrix).translate(offset, 0, (offset)).translateLocal(0f, -GROUND_PADDING, 0f).scale(0.5f,  LIFE * SPEED - SPEED, 0.5f), world, true);
+
+//        physicalHitbox = new PhysicalHitbox(new DisplayHitbox(new Vector3d(origin.x, origin.y, origin.z), new Matrix4f(defaultTransformationMatrix).translate(offset, 0, (offset)).translateLocal(0f, -GROUND_PADDING, 0f).scale(0.5f,  LIFE * SPEED - SPEED, 0.5f), world), world, true);
 
         List<VisualBlockDisplay> blockDisplays = new ArrayList<>();
         //generate the mesh
         for (int i = 0; i < SPEED * LIFE - SPEED; i++) {
             float sizeFactor = ((float) (SPEED * LIFE - SPEED - i) / (SPEED * LIFE - SPEED)) + 0.5f;
-            blockDisplays.add(new VisualBlockDisplay(new Vector3f(0, i, 0), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, -0.5f, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData, RotatedDirectionAdjuster.getInstance()));
+            blockDisplays.add(new VisualBlockDisplay(world, new Vector3f(), new Vector3f(new Random().nextInt(-2, 2), i, new Random().nextInt(-2, 2)), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, -0.5f, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData, RotatedDirectionAdjuster.getInstance()));
         }
 
         blockDisplays.sort(new DescendingYSort());
         List<VisualBlockDisplay> adjustedBlockDisplays = new ArrayList<>();
         for (VisualBlockDisplay blockDisplay : blockDisplays) {
-            adjustedBlockDisplays.add(new VisualBlockDisplay(blockDisplay.origin(), blockDisplay.adjust(dir), blockData, null));
+            adjustedBlockDisplays.add(new VisualBlockDisplay(world, blockDisplay.adjust(origin, dir), blockDisplay.relativeOrigin(), blockDisplay.adjust(dir), blockData, null));
         }
 
-        earthbendingDisplay = new EarthbendingDisplayImpl(world, spikeOrigin, dir, LINGER, LIFE, 1.5f, blockDisplays, adjustedBlockDisplays);
+        physicalHitbox = new GeneralVisualBlockCollisionHitbox(world, origin, LIFE, LINGER, adjustedBlockDisplays);
+        earthbendingDisplay = new EarthbendingDisplayImpl(world, spikeOrigin, dir, LINGER, LIFE, 0f, adjustedBlockDisplays);
     }
 
     @Override
     public void tick() {
-//        if (progress < LIFE + 1) {
-//            if (progress < LIFE) {
-//                hitbox.setOrigin(new Vector3d(origin).add(new Vector3d(dir).mul(progress * SPEED)));
-//            }
-//        }
-
         if (progress > LIFE + LINGER) kill();
 
         progress++;
         hitbox.tick();
+        physicalHitbox.tick();
         earthbendingDisplay.tick();
     }
 

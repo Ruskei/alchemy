@@ -1,8 +1,9 @@
 package com.ixume.alchemy.command;
 
 import com.ixume.alchemy.Alchemy;
+import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.gameobject.TickersManager;
-import com.ixume.alchemy.gameobject.virtualobjects.VirtualParallelepiped;
+import com.ixume.alchemy.gameobject.virtualobjects.PhysicalHitbox;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -11,6 +12,8 @@ import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class VirtualBlockDisplayCommand implements CommandExecutor {
     private static VirtualBlockDisplayCommand INSTANCE;
     public static void init(Alchemy plugin) {
@@ -18,7 +21,7 @@ public class VirtualBlockDisplayCommand implements CommandExecutor {
     }
 
     private VirtualBlockDisplayCommand(Alchemy plugin) {
-        plugin.getCommand("virtualtest").setExecutor(this);
+        Objects.requireNonNull(plugin.getCommand("virtualtest")).setExecutor(this);
     }
 
     @Override
@@ -40,7 +43,7 @@ public class VirtualBlockDisplayCommand implements CommandExecutor {
             }
 
             if (c != null) {
-                TickersManager.getInstance().tickers.get(player.getWorld().getName()).addObject(new VirtualParallelepiped(c.getLocation().toVector().toVector3d(), c.getTransformation(), world, args[0].equals("b")));
+                TickersManager.getInstance().tickers.get(player.getWorld().getName()).addObject(new PhysicalHitbox(new DisplayHitbox(c.getLocation().toVector().toVector3d(), c.getTransformation(), world), world, true));
             }
         }
 

@@ -1,28 +1,5 @@
 package com.ixume.alchemy.gameobject.bending;
 
-import com.ixume.alchemy.DisplayHitbox;
-import com.ixume.alchemy.DisplayTransformation;
-import com.ixume.alchemy.gameobject.GameObject;
-import com.ixume.alchemy.gameobject.GameObjectTicker;
-import com.ixume.alchemy.gameobject.TickersManager;
-import com.ixume.alchemy.gameobject.bending.directionadjuster.RotatedDirectionAdjuster;
-import com.ixume.alchemy.gameobject.virtualobjects.VirtualParallelepiped;
-import com.ixume.alchemy.hitbox.Hitbox;
-import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
-import org.bukkit.World;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.joml.Matrix4f;
-import org.joml.Vector3d;
-import org.joml.Vector3f;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 //bending objects consist of those with damage hitboxes, physical hitboxes, and *always* block displays
 //can have one, the other, or both, probably not neither
 //hitboxes are a singular box that moves along in some way

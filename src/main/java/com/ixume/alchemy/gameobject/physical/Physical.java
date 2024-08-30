@@ -1,9 +1,9 @@
 package com.ixume.alchemy.gameobject.physical;
 
-import org.joml.Vector4d;
-
-import java.util.List;
+import it.unimi.dsi.fastutil.Pair;
+import org.joml.Vector3f;
 
 public interface Physical {
-    List<Vector4d> getColliders();
+    long isInside(Vector3f isInside);
+    Pair<Vector3f, Vector3f> getBoundingBox();
 }

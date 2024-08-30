@@ -21,4 +21,10 @@ public class RotatedDirectionAdjuster implements DirectionAdjuster {
         rotatedMatrix.rotate(temp);
         return temp.get(rotatedMatrix).mul(toAdjust);
     }
+
+    @Override
+    public Vector3f adjust(Vector3f toAdjust, Vector3f origin, Vector3f dir) {
+        Quaternionf rotationQuaternion = new Quaternionf().rotateTo(IDENTITY, dir);
+        return toAdjust.rotate(rotationQuaternion).add(origin);
+    }
 }

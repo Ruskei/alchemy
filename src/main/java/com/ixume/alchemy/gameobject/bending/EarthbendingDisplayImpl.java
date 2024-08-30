@@ -28,6 +28,7 @@ public class EarthbendingDisplayImpl implements GameObject {
     private final Vector3f dir;
     private final float maxY;
     private final List<VisualBlockDisplay> blockDisplays;
+    private final List<VisualBlockDisplay> adjustedBlockDisplays;
     private final List<Pair<VisualBlockDisplay, BlockDisplay>> needyBlockDisplays;
     private final List<BlockDisplay> entities;
     private final GameObjectTicker ticker;
@@ -35,18 +36,20 @@ public class EarthbendingDisplayImpl implements GameObject {
     private final Vector3i VISIBILITY_OFFSET;
     private int progress;
 
-    public EarthbendingDisplayImpl(World world, Vector3f origin, Vector3f dir, int linger, int life, float smoothOffset, List<VisualBlockDisplay> blockDisplays) {
+    public EarthbendingDisplayImpl(World world, Vector3f origin, Vector3f dir, int linger, int life, float smoothOffset, List<VisualBlockDisplay> blockDisplays, List<VisualBlockDisplay> adjustedBlockDisplays) {
         this.world = world;
         this.ticker = TickersManager.getInstance().tickers.get(world.getName());
         this.dir = dir.normalize();
-        this.origin = new Vector3f(origin).sub(new Vector3f(dir).mul(smoothOffset));
+//        this.origin = new Vector3f(origin).sub(new Vector3f(dir).mul(smoothOffset));
+        this.origin = new Vector3f(origin);
         progress = 0;
         LINGER = linger;
         LIFE = life;
         if (blockDisplays.isEmpty()) throw new NullPointerException("empty array!");
         this.blockDisplays = blockDisplays;
+        this.adjustedBlockDisplays = adjustedBlockDisplays;
         needyBlockDisplays = new ArrayList<>();
-        blockDisplays.sort(new DescendingYSort());
+//        blockDisplays.sort(new DescendingYSort());
         entities = new ArrayList<>();
         maxY = blockDisplays.getFirst().origin().y;
         rotationQuaternion = new Quaternionf().rotateTo(IDENTITY, dir);
@@ -74,6 +77,7 @@ public class EarthbendingDisplayImpl implements GameObject {
         float factor = (1f - (float) (progress + 1) / LIFE) * maxY;
         while (!blockDisplays.isEmpty() && blockDisplays.get(0).origin().y >= factor) {
             VisualBlockDisplay visualBlockDisplay = blockDisplays.getFirst();
+            VisualBlockDisplay adjustedBlockDisplay = adjustedBlockDisplays.getFirst();
             //valid block display to spawn
             //spawn w/ relative y = 0, moves to its own relativeY
             Vector3f relativePosition = new Vector3f(visualBlockDisplay.origin().x, 0, visualBlockDisplay.origin().z).rotate(rotationQuaternion);
@@ -83,12 +87,13 @@ public class EarthbendingDisplayImpl implements GameObject {
             blockDisplay.setInterpolationDelay(-1);
             blockDisplay.setTeleportDuration(LIFE - progress);
 
-            Matrix4f rotatedMatrix = visualBlockDisplay.adjust(dir);
+            Matrix4f rotatedMatrix = adjustedBlockDisplay.transformationMatrix();
             rotatedMatrix.translateLocal(-VISIBILITY_OFFSET.x, -VISIBILITY_OFFSET.y, -VISIBILITY_OFFSET.z);
 
             blockDisplay.setTransformationMatrix(rotatedMatrix);
             needyBlockDisplays.add(Pair.of(visualBlockDisplay, blockDisplay));
             blockDisplays.removeFirst();
+            adjustedBlockDisplays.removeFirst();
 
             entities.add(blockDisplay);
         }
@@ -96,7 +101,6 @@ public class EarthbendingDisplayImpl implements GameObject {
 
     private void updateMovement() {
         //needy block displays are from last tick
-        System.out.println(needyBlockDisplays.size());
         for (Pair<VisualBlockDisplay, BlockDisplay> needyBlockDisplayPair : needyBlockDisplays) {
             Transformation transformation = needyBlockDisplayPair.right().getTransformation();
             transformation.getTranslation().add(new Vector3f(dir).mul(needyBlockDisplayPair.left().origin().y));
@@ -130,7 +134,6 @@ public class EarthbendingDisplayImpl implements GameObject {
 
     @Override
     public void kill() {
-        System.out.println(entities.size());
         for (BlockDisplay entity : entities) {
             entity.remove();
         }

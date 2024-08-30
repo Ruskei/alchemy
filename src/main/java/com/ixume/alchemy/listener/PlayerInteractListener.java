@@ -45,7 +45,7 @@ public class PlayerInteractListener implements Listener {
                 event.setCancelled(true);
                 Location origin = p.getEyeLocation();
                 Vector dir = p.getLocation().getDirection();
-                RayTraceResult rayTraceResult = w.rayTraceBlocks(origin, dir, 20);
+                RayTraceResult rayTraceResult = w.rayTraceBlocks(origin, dir, 50);
                 if (rayTraceResult != null) {
                     Location raycastLocation = rayTraceResult.getHitPosition().toLocation(w);
                     List<Entity> nearbyEntities = w.getNearbyEntities(raycastLocation, 14, 14, 14).stream().filter(k -> !(k.getType().equals(EntityType.BLOCK_DISPLAY)) && !(k.isDead())).toList();

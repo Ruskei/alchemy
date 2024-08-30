@@ -37,8 +37,8 @@ public class HitboxFragment {
         return new Vector3d(normal);
     }
 
-    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.4F);
-    private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.1F);
+    private final Particle.DustOptions edgeDust = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 0.7F);
+    private final Particle.DustOptions normalDust = new Particle.DustOptions(Color.fromRGB(0, 0, 255), 0.2F);
 
     public void render() {
         double INTERVAL = 0.2;

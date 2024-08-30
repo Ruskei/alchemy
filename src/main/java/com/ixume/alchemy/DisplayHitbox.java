@@ -18,7 +18,6 @@ public class DisplayHitbox implements GameObject, Hitbox {
     private final List<HitboxFragmentImpl> fragments;
     private List<Vector3d> vertices;
     private Vector3d origin;
-    private final Matrix4f inverse;
 
     public DisplayHitbox(Vector3d origin, Transformation transformation, World world) {
         this.origin = origin;
@@ -36,10 +35,7 @@ public class DisplayHitbox implements GameObject, Hitbox {
 
         DisplayTransformation displayTransformation = new DisplayTransformation(transformation);
         Matrix4f finalMatrix = displayTransformation.getMatrix();
-        System.out.println(origin);
-        System.out.println(finalMatrix);
         vertices = vertices.stream().map(k -> finalMatrix.transform(new Vector4f((float) k.x, (float) k.y, (float) k.z, 1f))).map(k -> new Vector3d(origin.x + k.x, origin.y + k.y, origin.z + k.z)).toList();
-        inverse = new Matrix4f(finalMatrix).invert();
         fragments.add(new ParallelogramHitboxFragment(vertices.get(0), new Vector3d(vertices.get(1)).sub(vertices.get(0)), new Vector3d(vertices.get(3)).sub(vertices.get(0)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(1), new Vector3d(vertices.get(2)).sub(vertices.get(1)), new Vector3d(vertices.get(5)).sub(vertices.get(1)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(2), new Vector3d(vertices.get(3)).sub(vertices.get(2)), new Vector3d(vertices.get(6)).sub(vertices.get(2)), world));
@@ -62,17 +58,18 @@ public class DisplayHitbox implements GameObject, Hitbox {
         vertices.add(new Vector3d(1, 1, 1));
         vertices.add(new Vector3d(0, 1, 1));
 
-        System.out.println(matrix);
-
         vertices = vertices.stream().map(k -> matrix.transform(new Vector4f((float) k.x, (float) k.y, (float) k.z, 1f))).map(k -> new Vector3d(origin.x + k.x, origin.y + k.y, origin.z + k.z)).toList();
 
-        inverse = new Matrix4f(matrix).invert();
         fragments.add(new ParallelogramHitboxFragment(vertices.get(0), new Vector3d(vertices.get(1)).sub(vertices.get(0)), new Vector3d(vertices.get(3)).sub(vertices.get(0)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(1), new Vector3d(vertices.get(2)).sub(vertices.get(1)), new Vector3d(vertices.get(5)).sub(vertices.get(1)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(2), new Vector3d(vertices.get(3)).sub(vertices.get(2)), new Vector3d(vertices.get(6)).sub(vertices.get(2)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(7), new Vector3d(vertices.get(3)).sub(vertices.get(7)), new Vector3d(vertices.get(4)).sub(vertices.get(7)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(4), new Vector3d(vertices.get(0)).sub(vertices.get(4)), new Vector3d(vertices.get(5)).sub(vertices.get(4)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(6), new Vector3d(vertices.get(5)).sub(vertices.get(6)), new Vector3d(vertices.get(7)).sub(vertices.get(6)), world));
+    }
+
+    public Vector3d getOrigin() {
+        return origin;
     }
 
     public void setOrigin(Vector3d newOrigin) {
@@ -107,7 +104,7 @@ public class DisplayHitbox implements GameObject, Hitbox {
 
     @Override
     public void tick() {
-
+        fragments.forEach(HitboxFragmentImpl::render);
     }
 
     @Override

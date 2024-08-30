@@ -6,6 +6,7 @@ import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.gameobject.bending.collision.GeneralVisualBlockCollisionHitbox;
 import com.ixume.alchemy.gameobject.bending.damage.LinearDamageHitbox;
+import com.ixume.alchemy.gameobject.bending.directionadjuster.IdentityDirectionAdjuster;
 import com.ixume.alchemy.gameobject.bending.directionadjuster.RotatedDirectionAdjuster;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
@@ -25,7 +26,6 @@ public class Spike implements GameObject, Hitbox {
     private static final int SPEED = 4;
     private static final int LIFE = 4;
     private static final int SMOOTH_OFFSET = 0;
-    private static final int GROUND_PADDING = 0;
 
     private int progress;
     private final GameObjectTicker ticker;
@@ -58,17 +58,12 @@ public class Spike implements GameObject, Hitbox {
         dir.rotate(transformation.rightRotation).rotate(transformation.leftRotation);
         dir.mul(-1);
 
-        Vector3f origin = new Vector3f(spikeOrigin.x - dir.x * (SMOOTH_OFFSET), spikeOrigin.y - dir.y * (SMOOTH_OFFSET) + GROUND_PADDING, spikeOrigin.z - dir.z * (SMOOTH_OFFSET));
+        Vector3f origin = new Vector3f(spikeOrigin.x - dir.x * (SMOOTH_OFFSET), spikeOrigin.y - dir.y * (SMOOTH_OFFSET), spikeOrigin.z - dir.z * (SMOOTH_OFFSET));
 
         Matrix4f defaultTransformationMatrix = transformation.getMatrix();
 
-        Matrix4f hitboxMatrix = new Matrix4f(defaultTransformationMatrix).translate(0f, 0, 0f).scale(1f, SPEED, 1f).translateLocal(0, -GROUND_PADDING, 0);
+        Matrix4f hitboxMatrix = new Matrix4f(defaultTransformationMatrix).translate(0f, 0, 0f).scale(1f, SPEED, 1f);
         hitbox = new LinearDamageHitbox(world, new Vector3f(origin), new Vector3f(dir), hitboxMatrix, SPEED, LIFE, LINGER);
-
-        float factor = (float) (progress) / (SPEED * LIFE * 2) + 0.5f;
-        float offset = (1f - factor) / 2f;
-
-//        physicalHitbox = new PhysicalHitbox(new DisplayHitbox(new Vector3d(origin.x, origin.y, origin.z), new Matrix4f(defaultTransformationMatrix).translate(offset, 0, (offset)).translateLocal(0f, -GROUND_PADDING, 0f).scale(0.5f,  LIFE * SPEED - SPEED, 0.5f), world), world, true);
 
         List<VisualBlockDisplay> blockDisplays = new ArrayList<>();
         //generate the mesh

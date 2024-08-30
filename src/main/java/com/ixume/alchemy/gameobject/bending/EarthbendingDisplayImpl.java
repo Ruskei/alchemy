@@ -77,14 +77,14 @@ public class EarthbendingDisplayImpl implements GameObject {
             //valid block display to spawn
             //spawn w/ relative y = 0, moves to its own relativeY
             Vector3f relativePosition = new Vector3f(adjustedBlockDisplay.relativeOrigin().x, 0, adjustedBlockDisplay.relativeOrigin().z).rotate(rotationQuaternion);
-            BlockDisplay blockDisplay = world.spawn(new Location(world, origin.x + relativePosition.x + VISIBILITY_OFFSET.x, origin.y + relativePosition.y + VISIBILITY_OFFSET.y, origin.z + relativePosition.z + VISIBILITY_OFFSET.z), BlockDisplay.class);
+            BlockDisplay blockDisplay = world.spawn(new Location(world, origin.x + VISIBILITY_OFFSET.x, origin.y + VISIBILITY_OFFSET.y, origin.z + VISIBILITY_OFFSET.z), BlockDisplay.class);
             blockDisplay.setBlock(adjustedBlockDisplay.displayData());
             blockDisplay.setInterpolationDuration(LIFE - 1 - progress);
             blockDisplay.setInterpolationDelay(-1);
             blockDisplay.setTeleportDuration(LIFE - progress);
 
             Matrix4f rotatedMatrix = adjustedBlockDisplay.transformationMatrix();
-            rotatedMatrix.translateLocal(-VISIBILITY_OFFSET.x, -VISIBILITY_OFFSET.y, -VISIBILITY_OFFSET.z);
+            rotatedMatrix.translateLocal(relativePosition.x - VISIBILITY_OFFSET.x, relativePosition.y - VISIBILITY_OFFSET.y, relativePosition.z - VISIBILITY_OFFSET.z);
 
             blockDisplay.setTransformationMatrix(rotatedMatrix);
             needyBlockDisplays.add(Pair.of(adjustedBlockDisplay, blockDisplay));

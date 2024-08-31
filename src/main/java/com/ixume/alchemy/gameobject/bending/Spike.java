@@ -6,7 +6,6 @@ import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.gameobject.bending.collision.GeneralVisualBlockCollisionHitbox;
 import com.ixume.alchemy.gameobject.bending.damage.LinearDamageHitbox;
-import com.ixume.alchemy.gameobject.bending.directionadjuster.IdentityDirectionAdjuster;
 import com.ixume.alchemy.gameobject.bending.directionadjuster.RotatedDirectionAdjuster;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
@@ -31,14 +30,11 @@ public class Spike implements GameObject, Hitbox {
     private final GameObjectTicker ticker;
 
     private final LinearDamageHitbox hitbox;
-    private final Set<Integer> hitEntities;
     private final GeneralVisualBlockCollisionHitbox physicalHitbox;
-//    private final PhysicalHitbox physicalHitbox;
-    
+
     private final EarthbendingDisplayImpl earthbendingDisplay;
 
     public Spike(Vector3f spikeOrigin, Vector3f target, BlockData blockData, Player player) {
-        hitEntities = new HashSet<>();
         progress = 0;
         World world = player.getWorld();
         ticker = TickersManager.getInstance().tickers.get(world.getName());
@@ -62,14 +58,14 @@ public class Spike implements GameObject, Hitbox {
 
         Matrix4f defaultTransformationMatrix = transformation.getMatrix();
 
-        Matrix4f hitboxMatrix = new Matrix4f(defaultTransformationMatrix).translate(0f, 0, 0f).scale(1f, SPEED, 1f);
-        hitbox = new LinearDamageHitbox(world, new Vector3f(origin), new Vector3f(dir), hitboxMatrix, SPEED, LIFE, LINGER);
+        Matrix4f hitboxMatrix = new Matrix4f(defaultTransformationMatrix).scale(1f, SPEED, 1f);
+        hitbox = new LinearDamageHitbox(world, new Vector3f(origin), new Vector3f(dir), hitboxMatrix, SPEED, LIFE, LINGER, 20);
 
         List<VisualBlockDisplay> blockDisplays = new ArrayList<>();
         //generate the mesh
         for (int i = 0; i < SPEED * LIFE - SPEED; i++) {
             float sizeFactor = ((float) (SPEED * LIFE - SPEED - i) / (SPEED * LIFE - SPEED)) + 0.5f;
-            blockDisplays.add(new VisualBlockDisplay(world, new Vector3f(), new Vector3f(new Random().nextInt(-2, 2), i, new Random().nextInt(-2, 2)), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, -0.5f, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData, RotatedDirectionAdjuster.getInstance()));
+            blockDisplays.add(new VisualBlockDisplay(world, new Vector3f(), new Vector3f(new Random().nextFloat(-2, 2), i, new Random().nextFloat(-2, 2)), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, -0.5f, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData, RotatedDirectionAdjuster.getInstance()));
         }
 
         blockDisplays.sort(new DescendingYSort());
@@ -87,6 +83,7 @@ public class Spike implements GameObject, Hitbox {
         if (progress > LIFE + LINGER) kill();
 
         progress++;
+
         hitbox.tick();
         physicalHitbox.tick();
         earthbendingDisplay.tick();
@@ -112,16 +109,6 @@ public class Spike implements GameObject, Hitbox {
 
     @Override
     public List<Vector3d> collide(Entity entity) {
-        final List<Vector3d> collisions = this.hitbox.collide(entity);
-        if (!hitEntities.contains(entity.getEntityId()) && progress < SPEED * LIFE + 1) {
-            if (!collisions.isEmpty()) {
-                if (entity instanceof LivingEntity livingEntity) {
-                    livingEntity.damage(20);
-                    hitEntities.add(entity.getEntityId());
-                }
-            }
-        }
-
-        return collisions;
+        return this.hitbox.collide(entity);
     }
 }

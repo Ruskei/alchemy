@@ -7,7 +7,7 @@ import com.ixume.alchemy.hitbox.Hitbox;
 import java.util.List;
 
 public interface DamageHitbox extends GameObject, Hitbox {
-    interface UncompletedDamageHitbox {
+    interface CompletableDamageHitbox {
         DamageHitbox complete(List<VisualBlockDisplay> displays);
     }
 }

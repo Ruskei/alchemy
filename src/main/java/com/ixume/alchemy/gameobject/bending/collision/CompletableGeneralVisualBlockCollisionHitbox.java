@@ -6,7 +6,7 @@ import org.joml.Vector3f;
 
 import java.util.List;
 
-public record UncompletedGeneralVisualBlockCollisionHitbox(World world, Vector3f origin, int life) implements PhysicalHitbox.UncompletedPhysicalHitbox {
+public record CompletableGeneralVisualBlockCollisionHitbox(World world, Vector3f origin, int life) implements PhysicalHitbox.CompletablePhysicalHitbox {
     @Override
     public PhysicalHitbox complete(List<VisualBlockDisplay> displays) {
         return new GeneralVisualBlockCollisionHitbox(world, origin, life, displays);

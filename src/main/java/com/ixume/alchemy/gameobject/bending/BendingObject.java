@@ -32,7 +32,7 @@ public class BendingObject implements GameObject, Hitbox {
 
     private final EarthbendingDisplayImpl earthbendingDisplay;
 
-    public BendingObject(Vector3f origin, Vector3f dir, int life, int linger, List<VisualBlockDisplay> blockDisplays, World world, PhysicalHitbox.UncompletedPhysicalHitbox uncompletedPhysicalHitbox, DamageHitbox.UncompletedDamageHitbox uncompletedDamageHitbox) {
+    public BendingObject(Vector3f origin, Vector3f dir, int life, int linger, List<VisualBlockDisplay> blockDisplays, World world, PhysicalHitbox.CompletablePhysicalHitbox completablePhysicalHitbox, DamageHitbox.CompletableDamageHitbox uncompletedDamageHitbox) {
         progress = 0;
         this.life = life;
         this.linger = linger;
@@ -44,7 +44,7 @@ public class BendingObject implements GameObject, Hitbox {
             adjustedBlockDisplays.add(new VisualBlockDisplay(world, blockDisplay.adjust(origin, dir), blockDisplay.relativeOrigin(), blockDisplay.adjust(dir), blockDisplay.displayData(), null));
         }
 
-        physicalHitbox = uncompletedPhysicalHitbox.complete(adjustedBlockDisplays);
+        physicalHitbox = completablePhysicalHitbox.complete(adjustedBlockDisplays);
         damageHitbox = uncompletedDamageHitbox.complete(adjustedBlockDisplays);
         earthbendingDisplay = new EarthbendingDisplayImpl(world, origin, dir, linger, life, 0f, adjustedBlockDisplays);
         ticker.addObject(this);

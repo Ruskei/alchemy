@@ -1,15 +1,12 @@
 package com.ixume.alchemy.gameobject.bending;
 
-import com.ixume.alchemy.DisplayTransformation;
 import com.ixume.alchemy.gameobject.GameObject;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
-import com.ixume.alchemy.gameobject.bending.collision.GeneralVisualBlockCollisionHitbox;
 import com.ixume.alchemy.gameobject.bending.collision.PhysicalHitbox;
-import com.ixume.alchemy.gameobject.bending.collision.UncompletedGeneralVisualBlockCollisionHitbox;
+import com.ixume.alchemy.gameobject.bending.collision.CompletableGeneralVisualBlockCollisionHitbox;
 import com.ixume.alchemy.gameobject.bending.damage.DamageHitbox;
-import com.ixume.alchemy.gameobject.bending.damage.LinearDamageHitbox;
-import com.ixume.alchemy.gameobject.bending.damage.UncompletedLinearDamageHitbox;
+import com.ixume.alchemy.gameobject.bending.damage.CompletableLinearDamageHitbox;
 import com.ixume.alchemy.gameobject.bending.directionadjuster.RotatedDirectionAdjuster;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
@@ -41,7 +38,7 @@ public class Spike implements GameObject, Hitbox {
         Vector3f origin = new Vector3f(spikeOrigin.x - dir.x * (SMOOTH_OFFSET), spikeOrigin.y - dir.y * (SMOOTH_OFFSET), spikeOrigin.z - dir.z * (SMOOTH_OFFSET));
 
         Matrix4f hitboxMatrix = new Matrix4f().scale(1f, SPEED, 1f);
-        DamageHitbox.UncompletedDamageHitbox hitbox = new UncompletedLinearDamageHitbox(world, new Vector3f(origin), new Vector3f(dir), hitboxMatrix, SPEED, LIFE, LINGER, 20);
+        DamageHitbox.CompletableDamageHitbox hitbox = new CompletableLinearDamageHitbox(world, new Vector3f(origin), new Vector3f(dir), hitboxMatrix, SPEED, LIFE, LINGER, 20);
 
         List<VisualBlockDisplay> blockDisplays = new ArrayList<>();
 
@@ -51,13 +48,13 @@ public class Spike implements GameObject, Hitbox {
         }
 
         blockDisplays.sort(new DescendingYSort());
-        PhysicalHitbox.UncompletedPhysicalHitbox physicalHitbox = new UncompletedGeneralVisualBlockCollisionHitbox(world, origin, LIFE);
+        PhysicalHitbox.CompletablePhysicalHitbox physicalHitbox = new CompletableGeneralVisualBlockCollisionHitbox(world, origin, LIFE);
         bendingObject = new BendingObject(origin, dir, LIFE, LINGER, blockDisplays, world, physicalHitbox, hitbox);
     }
 
     @Override
     public void tick() {
-//        bendingObject.tick();
+        bendingObject.tick();
     }
 
     @Override

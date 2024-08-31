@@ -7,7 +7,7 @@ import com.ixume.alchemy.gameobject.physical.Physical;
 import java.util.List;
 
 public interface PhysicalHitbox extends GameObject, Physical {
-    interface UncompletedPhysicalHitbox {
+    interface CompletablePhysicalHitbox {
         PhysicalHitbox complete(List<VisualBlockDisplay> displays);
     }
 }

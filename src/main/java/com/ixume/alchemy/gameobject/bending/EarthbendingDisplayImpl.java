@@ -52,6 +52,7 @@ public class EarthbendingDisplayImpl implements GameObject {
         rotationQuaternion = new Quaternionf().rotateTo(IDENTITY, dir);
 
         VISIBILITY_OFFSET = findTransparentBlock(this.origin);
+        ticker.addObject(this);
     }
 
     private static final int SEARCH_SIZE = 2;

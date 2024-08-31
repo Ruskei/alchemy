@@ -1,6 +1,8 @@
 package com.ixume.alchemy;
 
 import com.ixume.alchemy.gameobject.GameObject;
+import com.ixume.alchemy.gameobject.GameObjectTicker;
+import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import com.ixume.alchemy.hitbox.ParallelogramHitboxFragment;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DisplayHitbox implements GameObject, Hitbox, com.ixume.alchemy.gameobject.physical.Physical {
+    private final GameObjectTicker ticker;
     private final List<HitboxFragmentImpl> fragments;
     private List<Vector3d> vertices;
     private Vector3d origin;
@@ -42,6 +45,7 @@ public class DisplayHitbox implements GameObject, Hitbox, com.ixume.alchemy.game
         fragments.add(new ParallelogramHitboxFragment(vertices.get(7), new Vector3d(vertices.get(3)).sub(vertices.get(7)), new Vector3d(vertices.get(4)).sub(vertices.get(7)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(4), new Vector3d(vertices.get(0)).sub(vertices.get(4)), new Vector3d(vertices.get(5)).sub(vertices.get(4)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(6), new Vector3d(vertices.get(5)).sub(vertices.get(6)), new Vector3d(vertices.get(7)).sub(vertices.get(6)), world));
+        ticker = TickersManager.getInstance().tickers.get(world.getName());
     }
 
     public DisplayHitbox(Vector3d origin, Matrix4f matrix, World world) {
@@ -66,6 +70,7 @@ public class DisplayHitbox implements GameObject, Hitbox, com.ixume.alchemy.game
         fragments.add(new ParallelogramHitboxFragment(vertices.get(7), new Vector3d(vertices.get(3)).sub(vertices.get(7)), new Vector3d(vertices.get(4)).sub(vertices.get(7)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(4), new Vector3d(vertices.get(0)).sub(vertices.get(4)), new Vector3d(vertices.get(5)).sub(vertices.get(4)), world));
         fragments.add(new ParallelogramHitboxFragment(vertices.get(6), new Vector3d(vertices.get(5)).sub(vertices.get(6)), new Vector3d(vertices.get(7)).sub(vertices.get(6)), world));
+        ticker = TickersManager.getInstance().tickers.get(world.getName());
     }
 
     public Vector3d getOrigin() {

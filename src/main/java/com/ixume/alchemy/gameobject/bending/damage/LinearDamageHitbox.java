@@ -1,7 +1,10 @@
 package com.ixume.alchemy.gameobject.bending.damage;
 
 import com.ixume.alchemy.DisplayHitbox;
+import com.ixume.alchemy.DisplayTransformation;
 import com.ixume.alchemy.gameobject.GameObject;
+import com.ixume.alchemy.gameobject.GameObjectTicker;
+import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import org.bukkit.World;
@@ -17,7 +20,8 @@ import java.util.Set;
 
 //defined by direction, dimensions, and life
 //only really needs origin, world,  matrix and a direction to move
-public class LinearDamageHitbox implements GameObject, Hitbox {
+public class LinearDamageHitbox implements DamageHitbox {
+    private final GameObjectTicker ticker;
     private final DisplayHitbox hitbox;
     private final Vector3f dir;
     private final Vector3f origin;
@@ -35,9 +39,21 @@ public class LinearDamageHitbox implements GameObject, Hitbox {
         this.speed = speed;
         this.life = life;
         this.linger = linger;
-        hitbox = new DisplayHitbox(new Vector3d(origin), matrix, world);
+
+        DisplayTransformation transformation = new DisplayTransformation();
+        Vector3f IDENTITY = new Vector3f(0, 1f, 0);
+        transformation.leftRotation.rotateTo(IDENTITY, dir);
+
+        Vector3f v = new Vector3f(0.5f, 0.5f, 0.5f);
+        v.rotate(transformation.rightRotation).rotate(transformation.leftRotation);
+        v.mul(-1);
+        transformation.translation.set(v);
+
+        hitbox = new DisplayHitbox(new Vector3d(origin), transformation.getMatrix().mul(matrix), world);
         hitEntities = new HashSet<>();
         this.damage = damage;
+        ticker = TickersManager.getInstance().tickers.get(world.getName());
+        ticker.addObject(this);
     }
 
     @Override
@@ -55,6 +71,7 @@ public class LinearDamageHitbox implements GameObject, Hitbox {
     @Override
     public void kill() {
         hitbox.kill();
+        ticker.removeObject(this);
     }
 
     @Override

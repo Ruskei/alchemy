@@ -55,7 +55,7 @@ public class PhysicalHitbox implements GameObject {
         final float xDiff = max.x - min.x;
         final float yDiff = max.y - min.y;
         final float zDiff = max.z - min.z;
-        float RESOLUTION = (float) Math.min(Math.max(Math.max(Math.max(xDiff, yDiff), zDiff) / 63d, 0.1d), 0.5);
+        float RESOLUTION = (float) Math.min(Math.max(Math.max(Math.max(xDiff, yDiff), zDiff) / 63d, 0.3d), 0.5);
         final int width = (int) Math.floor(xDiff / RESOLUTION);
         final int length = (int) Math.floor(zDiff / RESOLUTION);
         final int height = (int) Math.floor(yDiff / RESOLUTION);
@@ -83,7 +83,7 @@ public class PhysicalHitbox implements GameObject {
         for (int z = 0; z < length; z++) {
             for (int x = 0; x < width; x++) {
                 cubeIndex = z * width + x;
-                rawCubes[cubeIndex] = points[cubeIndex] & points[cubeIndex + 1] & points[cubeIndex + width] & points[cubeIndex + width + 1];
+                rawCubes[cubeIndex] = points[cubeIndex] | points[cubeIndex + 1] | points[cubeIndex + width] | points[cubeIndex + width + 1];
             }
         }
 

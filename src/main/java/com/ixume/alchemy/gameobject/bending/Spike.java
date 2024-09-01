@@ -3,11 +3,11 @@ package com.ixume.alchemy.gameobject.bending;
 import com.ixume.alchemy.gameobject.GameObject;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
+import com.ixume.alchemy.gameobject.bending.collision.impl.GeneralVisualBlockCollisionHitbox;
 import com.ixume.alchemy.gameobject.bending.collision.PhysicalHitbox;
-import com.ixume.alchemy.gameobject.bending.collision.CompletableGeneralVisualBlockCollisionHitbox;
 import com.ixume.alchemy.gameobject.bending.damage.DamageHitbox;
-import com.ixume.alchemy.gameobject.bending.damage.CompletableLinearDamageHitbox;
-import com.ixume.alchemy.gameobject.bending.directionadjuster.RotatedDirectionAdjuster;
+import com.ixume.alchemy.gameobject.bending.damage.impl.LinearDamageHitbox;
+import com.ixume.alchemy.gameobject.bending.directionadjuster.impl.RotatedDirectionAdjuster;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import org.bukkit.*;
@@ -38,17 +38,17 @@ public class Spike implements GameObject, Hitbox {
         Vector3f origin = new Vector3f(spikeOrigin.x - dir.x * (SMOOTH_OFFSET), spikeOrigin.y - dir.y * (SMOOTH_OFFSET), spikeOrigin.z - dir.z * (SMOOTH_OFFSET));
 
         Matrix4f hitboxMatrix = new Matrix4f().scale(1f, SPEED, 1f);
-        DamageHitbox.CompletableDamageHitbox hitbox = new CompletableLinearDamageHitbox(world, new Vector3f(origin), new Vector3f(dir), hitboxMatrix, SPEED, LIFE, LINGER, 20);
+        DamageHitbox.CompletableDamageHitbox hitbox = new LinearDamageHitbox.CompletableLinearDamageHitbox(world, new Vector3f(origin), new Vector3f(dir), hitboxMatrix, SPEED, LIFE, LINGER, 20);
 
         List<VisualBlockDisplay> blockDisplays = new ArrayList<>();
 
         for (int i = 0; i < SPEED * LIFE - SPEED; i++) {
             float sizeFactor = ((float) (SPEED * LIFE - SPEED - i) / (SPEED * LIFE - SPEED)) + 0.5f;
-            blockDisplays.add(new VisualBlockDisplay(world, new Vector3f(), new Vector3f(0, i, 0), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, -0.5f, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData, RotatedDirectionAdjuster.getInstance()));
+            blockDisplays.add(new VisualBlockDisplay(world, new Vector3f(), new Vector3f(0, i / 1.8f, 0), new Matrix4f().translate((1f - sizeFactor) / 2f - 0.5f, -0.5f, (1f - sizeFactor) / 2f - 0.5f).scale(sizeFactor, 1, sizeFactor), blockData, RotatedDirectionAdjuster.getInstance()));
         }
 
         blockDisplays.sort(new DescendingYSort());
-        PhysicalHitbox.CompletablePhysicalHitbox physicalHitbox = new CompletableGeneralVisualBlockCollisionHitbox(world, origin, LIFE);
+        PhysicalHitbox.CompletablePhysicalHitbox physicalHitbox = new GeneralVisualBlockCollisionHitbox.CompletableGeneralVisualBlockCollisionHitbox(world, origin, LIFE);
         bendingObject = new BendingObject(origin, dir, LIFE, LINGER, blockDisplays, world, physicalHitbox, hitbox);
     }
 

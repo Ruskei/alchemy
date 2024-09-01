@@ -1,10 +1,8 @@
-package com.ixume.alchemy.gameobject.bending.collision;
+package com.ixume.alchemy.gameobject.bending.collision.impl;
 
-import com.ixume.alchemy.gameobject.GameObject;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
 import com.ixume.alchemy.gameobject.bending.VisualBlockDisplay;
-import com.ixume.alchemy.gameobject.physical.Physical;
 import com.ixume.alchemy.gameobject.virtualobjects.PhysicalHitbox;
 import it.unimi.dsi.fastutil.Pair;
 import org.bukkit.World;
@@ -93,5 +91,12 @@ public class GeneralVisualBlockCollisionHitbox implements com.ixume.alchemy.game
         }
 
         return Pair.of(min, max);
+    }
+
+    public static record CompletableGeneralVisualBlockCollisionHitbox(World world, Vector3f origin, int life) implements CompletablePhysicalHitbox {
+        @Override
+        public com.ixume.alchemy.gameobject.bending.collision.PhysicalHitbox complete(List<VisualBlockDisplay> displays) {
+            return new GeneralVisualBlockCollisionHitbox(world, origin, life, displays);
+        }
     }
 }

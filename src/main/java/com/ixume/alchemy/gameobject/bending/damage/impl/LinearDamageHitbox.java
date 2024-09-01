@@ -1,10 +1,11 @@
-package com.ixume.alchemy.gameobject.bending.damage;
+package com.ixume.alchemy.gameobject.bending.damage.impl;
 
 import com.ixume.alchemy.DisplayHitbox;
 import com.ixume.alchemy.DisplayTransformation;
-import com.ixume.alchemy.gameobject.GameObject;
 import com.ixume.alchemy.gameobject.GameObjectTicker;
 import com.ixume.alchemy.gameobject.TickersManager;
+import com.ixume.alchemy.gameobject.bending.VisualBlockDisplay;
+import com.ixume.alchemy.gameobject.bending.damage.DamageHitbox;
 import com.ixume.alchemy.hitbox.Hitbox;
 import com.ixume.alchemy.hitbox.HitboxFragmentImpl;
 import org.bukkit.World;
@@ -97,5 +98,12 @@ public class LinearDamageHitbox implements DamageHitbox {
         }
 
         return this.hitbox.collide(entity);
+    }
+
+    public static record CompletableLinearDamageHitbox(World world, Vector3f origin, Vector3f dir, Matrix4f matrix, int speed, int life, int linger, int damage) implements CompletableDamageHitbox {
+        @Override
+        public DamageHitbox complete(List<VisualBlockDisplay> displays) {
+            return new LinearDamageHitbox(world, origin, dir, matrix, speed, life, linger, damage);
+        }
     }
 }
